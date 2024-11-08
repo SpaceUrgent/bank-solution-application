@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import spaceurgent.banking.exception.InvalidAmountException;
 
 @Entity
 @Table(name = "accounts")
@@ -26,5 +27,13 @@ public class Account {
     private Long balance;
 
     protected Account() {
+    }
+
+    public Account(Long initialBalance) {
+        assert initialBalance != null : "Initial balance is required";
+        if (initialBalance < 0L) {
+            throw new InvalidAmountException("Initial balance can't be less than 0");
+        }
+        this.balance = initialBalance;
     }
 }
