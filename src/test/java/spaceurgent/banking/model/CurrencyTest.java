@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class CurrencyTest {
 
     @ParameterizedTest
-    @ValueSource(strings = {"UAH", "USD", "EUR"})
+    @ValueSource(strings = {"UAH"})
     void currencyFromAbbreviation_withSupportedAbbreviations(String currencyAbbreviation) {
         assertEquals(currencyAbbreviation, Currency.of(currencyAbbreviation).name());
     }

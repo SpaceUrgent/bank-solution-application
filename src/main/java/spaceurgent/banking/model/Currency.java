@@ -7,9 +7,7 @@ import java.util.Arrays;
 import static java.util.Objects.requireNonNull;
 
 public enum Currency {
-    UAH,
-    USD,
-    EUR;
+    UAH;
 
     public static Currency of(String currencyAbbreviation) {
         requireNonNull(currencyAbbreviation, "Currency abbreviation is required");
