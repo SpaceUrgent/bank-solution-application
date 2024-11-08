@@ -17,6 +17,11 @@ class AccountTest {
     }
 
     @Test
+    void createAccount_withNullArg() {
+        assertThrows(NullPointerException.class, () -> new Account(null));
+    }
+
+    @Test
     void createAccount_withNegativeInitialBalance_throws() {
         final var negativeInitialBalance = -1L;
         final var exception = assertThrows(

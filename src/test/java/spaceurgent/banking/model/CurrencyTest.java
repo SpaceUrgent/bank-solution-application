@@ -18,6 +18,11 @@ class CurrencyTest {
     }
 
     @Test
+    void currencyFromAbbreviation_withNullArgument() {
+        assertThrows(NullPointerException.class, () -> Currency.of(null));
+    }
+
+    @Test
     void currencyFromAbbreviation_withUnsupportedAbbreviations() {
         final var randomString = UUID.randomUUID().toString();
         final var exception = assertThrows(
