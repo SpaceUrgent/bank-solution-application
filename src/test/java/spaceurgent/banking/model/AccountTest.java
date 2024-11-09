@@ -11,20 +11,26 @@ import java.math.RoundingMode;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AccountTest {
+    private final static String TEST_ACCOUNT_NUMBER = "26000000000000";
     private final static Currency DEFAULT_CURRENCY = Currency.UAH;
 
     @ParameterizedTest
     @ValueSource(doubles = {0, 0.1111, 0.1199, 100.1,  1000, Double.MAX_VALUE})
     void createAccount_withValidInitialBalance(Double initialBalance) {
         final var expectedBalance = BigDecimal.valueOf(initialBalance).setScale(2, RoundingMode.FLOOR);
-        final var account = new Account(BigDecimal.valueOf(initialBalance));
+        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.valueOf(initialBalance));
         assertEquals(expectedBalance, account.getBalance(), "Account balance differs from initial");
         assertEquals(DEFAULT_CURRENCY, account.getCurrency(), "Incorrect default currency");
     }
 
     @Test
-    void createAccount_withNullArg() {
-        assertThrows(NullPointerException.class, () -> new Account(null));
+    void createAccount_withNullAccountNumber() {
+        assertThrows(NullPointerException.class, () -> new Account(null, BigDecimal.ZERO));
+    }
+
+    @Test
+    void createAccount_withNullInitialBalance() {
+        assertThrows(NullPointerException.class, () -> new Account(TEST_ACCOUNT_NUMBER, null));
     }
 
     @Test
@@ -32,7 +38,7 @@ class AccountTest {
         final var negativeInitialBalance = BigDecimal.valueOf(-1L);
         final var exception = assertThrows(
                 InvalidAmountException.class,
-                () -> new Account(negativeInitialBalance)
+                () -> new Account(TEST_ACCOUNT_NUMBER, negativeInitialBalance)
         );
         assertEquals("Initial balance can't be less than 0", exception.getMessage());
     }
