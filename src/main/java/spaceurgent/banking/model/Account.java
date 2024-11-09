@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -13,6 +14,8 @@ import lombok.Setter;
 import lombok.ToString;
 import spaceurgent.banking.exception.InvalidAmountException;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
@@ -28,16 +31,19 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_id_sequence")
     private Long id;
     @Column(nullable = false)
-    private Long balance;
+    private BigDecimal balance;
+
+    @Transient
+    private final static int BALANCE_SCALE = 2;
 
     protected Account() {
     }
 
-    public Account(Long initialBalance) {
+    public Account(BigDecimal initialBalance) {
         requireNonNull(initialBalance, "Initial balance is required");
-        if (initialBalance < 0L) {
+        if (initialBalance.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidAmountException("Initial balance can't be less than 0");
         }
-        this.balance = initialBalance;
+        this.balance = initialBalance.setScale(BALANCE_SCALE, RoundingMode.FLOOR);
     }
 }
