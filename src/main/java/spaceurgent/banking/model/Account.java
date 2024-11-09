@@ -58,4 +58,16 @@ public class Account {
         this.number = accountNumber;
         this.balance = initialBalance.setScale(BALANCE_SCALE, RoundingMode.FLOOR);
     }
+
+    public void deposit(BigDecimal amount) {
+        validateTransferAmount(amount);
+        this.balance = this.balance.add(amount).setScale(BALANCE_SCALE, RoundingMode.FLOOR);
+    }
+
+    private void validateTransferAmount(BigDecimal amount) {
+        requireNonNull(amount, "Amount is required");
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidAmountException("Transfer amount must be greater than 0");
+        }
+    }
 }

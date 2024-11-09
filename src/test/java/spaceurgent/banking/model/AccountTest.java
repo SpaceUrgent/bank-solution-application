@@ -43,4 +43,33 @@ class AccountTest {
         );
         assertEquals("Initial balance can't be less than 0", exception.getMessage());
     }
+
+    @ParameterizedTest
+    @ValueSource(doubles = {0.1111, 0.9999, 1, 10.8, 1000, Double.MAX_VALUE})
+    void deposit_withValidAmount(Double doubleAmountValue) {
+        final var initialBalance = BigDecimal.valueOf(100);
+        final var account = new Account(TEST_ACCOUNT_NUMBER, initialBalance);
+        final var depositAmount = BigDecimal.valueOf(doubleAmountValue);
+        final var expectedBalance = initialBalance.add(depositAmount).setScale(2, RoundingMode.FLOOR);
+        account.deposit(depositAmount);
+        assertEquals(expectedBalance, account.getBalance());
+    }
+
+    @Test
+    void deposit_withNullAmount() {
+        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.ZERO);
+        assertThrows(NullPointerException.class, () -> account.deposit(null));
+    }
+
+    @ParameterizedTest
+    @ValueSource(doubles = {-100, -10.231, 0, 0.009})
+    void deposit_withInvalidAmount(Double doubleAmountValue) {
+        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.ZERO);
+        final var depositAmount = BigDecimal.valueOf(doubleAmountValue).setScale(2, RoundingMode.FLOOR);
+        final var exception = assertThrows(
+                InvalidAmountException.class,
+                () -> account.deposit(depositAmount)
+        );
+        assertEquals("Transfer amount must be greater than 0", exception.getMessage());
+    }
 }
