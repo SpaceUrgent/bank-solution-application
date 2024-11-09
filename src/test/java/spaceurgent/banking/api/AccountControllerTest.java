@@ -13,7 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import spaceurgent.banking.TestUtils;
+import spaceurgent.banking.dto.AccountDetailsDto;
 import spaceurgent.banking.dto.AccountsDto;
+import spaceurgent.banking.exception.AccountNotFoundException;
 import spaceurgent.banking.exception.InvalidAmountException;
 import spaceurgent.banking.model.Account;
 import spaceurgent.banking.service.AccountService;
@@ -23,6 +25,7 @@ import java.time.Instant;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -116,6 +119,32 @@ class AccountControllerTest {
             assertEquals(currentAccount.getNumber(), currentAccountDto.number());
             assertEquals(currentAccount.getCurrency(), currentAccountDto.currency());
         }
+    }
+
+    @Test
+    void getAccount_ok() throws Exception {
+        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.valueOf(0.00));
+        doReturn(account).when(accountService).findAccount(eq(TEST_ACCOUNT_NUMBER));
+        mockMvc.perform(get("/api/accounts/{accountNumber}", TEST_ACCOUNT_NUMBER))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.number").value(TEST_ACCOUNT_NUMBER))
+                .andExpect(jsonPath("$.currency").value(account.getCurrency().name()))
+                .andExpect(jsonPath("$.balance").value(BigDecimal.valueOf(0.00)));
+    }
+
+    @Test
+    void getAccount_withNonExistingAccountNumber() throws Exception {
+        final var errorMessage = "Account not found";
+        doThrow(new AccountNotFoundException(errorMessage)).when(accountService).findAccount(any());
+        mockMvc.perform(get("/api/accounts/{accountNumber}", TEST_ACCOUNT_NUMBER))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.timestamp", validErrorTimestamp()))
+                .andExpect(jsonPath("$.code").value(HttpStatus.NOT_FOUND.value()))
+                .andExpect(jsonPath("$.message").value(errorMessage))
+                .andExpect(jsonPath("$.path").value("/api/accounts/%s".formatted(TEST_ACCOUNT_NUMBER)));
     }
 
     private static class ZeroBalanceMatcher implements ArgumentMatcher<BigDecimal> {

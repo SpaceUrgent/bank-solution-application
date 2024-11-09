@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,6 +15,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import spaceurgent.banking.dto.AccountDetailsDto;
 import spaceurgent.banking.dto.AccountsDto;
 import spaceurgent.banking.dto.ErrorDto;
+import spaceurgent.banking.exception.AccountNotFoundException;
 import spaceurgent.banking.exception.InvalidAmountException;
 import spaceurgent.banking.service.AccountService;
 
@@ -37,6 +39,11 @@ public class AccountController {
         return AccountsDto.from(accountService.findAccounts());
     }
 
+    @GetMapping("/{accountNumber}")
+    public AccountDetailsDto getAccount(@PathVariable String accountNumber) {
+        return AccountDetailsDto.from(accountService.findAccount(accountNumber));
+    }
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(value = {InvalidAmountException.class})
     public ErrorDto handleBadRequestException(Exception exception,
@@ -44,5 +51,14 @@ public class AccountController {
         final var requestPath = ServletUriComponentsBuilder.fromRequest(request)
                 .build().getPath();
         return new ErrorDto(HttpStatus.BAD_REQUEST.value(), exception.getMessage(), requestPath);
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(value = AccountNotFoundException.class)
+    public ErrorDto handleAccountNotFoundException(AccountNotFoundException exception,
+                                                   HttpServletRequest request) {
+        final var requestPath = ServletUriComponentsBuilder.fromRequest(request)
+                .build().getPath();
+        return new ErrorDto(HttpStatus.NOT_FOUND.value(), exception.getMessage(), requestPath);
     }
 }
