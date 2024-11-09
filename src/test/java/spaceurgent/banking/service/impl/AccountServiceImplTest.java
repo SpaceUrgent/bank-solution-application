@@ -72,7 +72,7 @@ class AccountServiceImplTest {
         final var initialBalance = BigDecimal.valueOf(10);
         final var account = new Account(TEST_ACCOUNT_NUMBER, initialBalance);
         final var depositAmount = BigDecimal.valueOf(100);
-        final var expectedBalance = initialBalance.add(depositAmount);
+        final var expectedBalance = initialBalance.add(depositAmount).setScale(2, RoundingMode.FLOOR);
         doReturn(Optional.of(account)).when(accountRepository).findByNumber(eq(TEST_ACCOUNT_NUMBER));
         doAnswer(invocation -> invocation.getArguments()[0]).when(accountRepository).save(any());
         final var updatedAccount = accountService.depositToAccount(TEST_ACCOUNT_NUMBER, depositAmount);
@@ -95,7 +95,7 @@ class AccountServiceImplTest {
         final var initialBalance = BigDecimal.valueOf(100);
         final var account = new Account(TEST_ACCOUNT_NUMBER, initialBalance);
         final var withdrawAmount = BigDecimal.valueOf(10);
-        final var expectedBalance = initialBalance.subtract(withdrawAmount);
+        final var expectedBalance = initialBalance.subtract(withdrawAmount).setScale(2, RoundingMode.FLOOR);
         doReturn(Optional.of(account)).when(accountRepository).findByNumber(eq(TEST_ACCOUNT_NUMBER));
         doAnswer(invocation -> invocation.getArguments()[0]).when(accountRepository).save(any());
         final var updatedAccount = accountService.withdrawFromAccount(TEST_ACCOUNT_NUMBER, withdrawAmount);

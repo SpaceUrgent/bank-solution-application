@@ -21,7 +21,6 @@ import spaceurgent.banking.service.AccountService;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Objects;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -201,7 +200,7 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.timestamp", validErrorTimestamp()))
                 .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.value()))
                 .andExpect(jsonPath("$.message").value("Required parameter 'amount' is not present."))
-                .andExpect(jsonPath("$.path").value("/api/accounts/%s/deposit".formatted(TEST_ACCOUNT_NUMBER)));
+                .andExpect(jsonPath("$.path").value("/api/accounts/%s/withdraw".formatted(TEST_ACCOUNT_NUMBER)));
     }
 
     private static class ZeroBalanceMatcher implements ArgumentMatcher<BigDecimal> {
