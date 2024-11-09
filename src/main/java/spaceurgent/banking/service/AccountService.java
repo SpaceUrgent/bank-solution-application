@@ -12,4 +12,6 @@ public interface AccountService {
     List<Account> findAccounts();
 
     Account findAccount(String accountNumber);
+
+    Account depositToAccount(String accountNumber, BigDecimal amount);
 }
