@@ -51,6 +51,12 @@ public class AccountController {
         return AccountDetailsDto.from(accountService.depositToAccount(accountNumber, amount));
     }
 
+    @PostMapping("/{accountNumber}/withdraw")
+    public AccountDetailsDto withdrawFromAccount(@PathVariable String accountNumber,
+                                                 @RequestParam(name = "amount") BigDecimal amount) {
+        return AccountDetailsDto.from(accountService.withdrawFromAccount(accountNumber, amount));
+    }
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(value = {InvalidAmountException.class})
     public ErrorDto handleBadRequestException(Exception exception,

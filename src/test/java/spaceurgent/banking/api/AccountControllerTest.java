@@ -174,6 +174,36 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.path").value("/api/accounts/%s/deposit".formatted(TEST_ACCOUNT_NUMBER)));
     }
 
+    @Test
+    void withdrawFromAccount_ok() throws Exception {
+        final var withdrawAmount = BigDecimal.valueOf(10);
+        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.valueOf(100));
+        doReturn(account).when(accountService).withdrawFromAccount(eq(TEST_ACCOUNT_NUMBER), eq(withdrawAmount));
+        mockMvc.perform(post("/api/accounts/{accountNumber}/withdraw", TEST_ACCOUNT_NUMBER)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("amount", withdrawAmount.toString()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.number").value(TEST_ACCOUNT_NUMBER))
+                .andExpect(jsonPath("$.currency").value(account.getCurrency().name()))
+                .andExpect(jsonPath("$.balance").value(account.getBalance().doubleValue()));
+    }
+
+    @Test
+    void withdrawFromAccount_withoutAmount_returnsBadRequest() throws Exception {
+        final var withdrawAmount = BigDecimal.valueOf(10);
+        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.valueOf(100));
+        doReturn(account).when(accountService).withdrawFromAccount(eq(TEST_ACCOUNT_NUMBER), eq(withdrawAmount));
+        mockMvc.perform(post("/api/accounts/{accountNumber}/withdraw", TEST_ACCOUNT_NUMBER))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.timestamp", validErrorTimestamp()))
+                .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.value()))
+                .andExpect(jsonPath("$.message").value("Required parameter 'amount' is not present."))
+                .andExpect(jsonPath("$.path").value("/api/accounts/%s/deposit".formatted(TEST_ACCOUNT_NUMBER)));
+    }
+
     private static class ZeroBalanceMatcher implements ArgumentMatcher<BigDecimal> {
 
         @Override
