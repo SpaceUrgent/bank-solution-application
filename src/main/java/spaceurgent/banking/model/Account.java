@@ -2,6 +2,8 @@ package spaceurgent.banking.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,7 +18,6 @@ import spaceurgent.banking.exception.InvalidAmountException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
@@ -30,6 +31,9 @@ public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_id_sequence")
     private Long id;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Currency currency = Currency.UAH;
     @Column(nullable = false)
     private BigDecimal balance;
 
