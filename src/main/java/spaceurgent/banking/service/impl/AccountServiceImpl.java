@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import spaceurgent.banking.model.Account;
 import spaceurgent.banking.repository.AccountRepository;
 import spaceurgent.banking.service.AccountService;
+import spaceurgent.banking.utils.AccountNumberGenerator;
 
 import java.math.BigDecimal;
 
@@ -18,6 +19,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account createAccount(BigDecimal initialBalance) {
         requireNonNull(initialBalance, "Initial balance is required");
-        return accountRepository.save(new Account(initialBalance));
+        final var accountNumber = AccountNumberGenerator.nextAccountNumber();
+        return accountRepository.save(new Account(accountNumber, initialBalance));
     }
 }
