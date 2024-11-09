@@ -11,13 +11,15 @@ import java.math.RoundingMode;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AccountTest {
+    private final static Currency DEFAULT_CURRENCY = Currency.UAH;
 
     @ParameterizedTest
-    @ValueSource(doubles = {0.1111, 0.1199, 100.1,  1000, Double.MAX_VALUE})
+    @ValueSource(doubles = {0, 0.1111, 0.1199, 100.1,  1000, Double.MAX_VALUE})
     void createAccount_withValidInitialBalance(Double initialBalance) {
         final var expectedBalance = BigDecimal.valueOf(initialBalance).setScale(2, RoundingMode.FLOOR);
         final var account = new Account(BigDecimal.valueOf(initialBalance));
         assertEquals(expectedBalance, account.getBalance(), "Account balance differs from initial");
+        assertEquals(DEFAULT_CURRENCY, account.getCurrency(), "Incorrect default currency");
     }
 
     @Test
