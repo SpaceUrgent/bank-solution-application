@@ -10,4 +10,6 @@ public interface AccountService {
     Account createAccount(BigDecimal initialBalance);
 
     List<Account> findAccounts();
+
+    Account findAccount(String accountNumber);
 }

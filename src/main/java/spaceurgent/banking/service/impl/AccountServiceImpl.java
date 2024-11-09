@@ -2,6 +2,7 @@ package spaceurgent.banking.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import spaceurgent.banking.exception.AccountNotFoundException;
 import spaceurgent.banking.model.Account;
 import spaceurgent.banking.repository.AccountRepository;
 import spaceurgent.banking.service.AccountService;
@@ -28,5 +29,12 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public List<Account> findAccounts() {
         return accountRepository.findAll();
+    }
+
+    @Override
+    public Account findAccount(String accountNumber) {
+        requireNonNull(accountNumber, "Account number is required");
+        return accountRepository.findByNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException("Account with number '%s' not found".formatted(accountNumber)));
     }
 }
