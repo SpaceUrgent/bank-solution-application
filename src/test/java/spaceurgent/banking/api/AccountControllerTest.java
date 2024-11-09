@@ -1,5 +1,6 @@
 package spaceurgent.banking.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
@@ -11,6 +12,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import spaceurgent.banking.TestUtils;
+import spaceurgent.banking.dto.AccountsDto;
 import spaceurgent.banking.exception.InvalidAmountException;
 import spaceurgent.banking.model.Account;
 import spaceurgent.banking.service.AccountService;
@@ -19,11 +22,13 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Random;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -39,6 +44,8 @@ class AccountControllerTest {
     private MockMvc mockMvc;
     @MockBean
     private AccountService accountService;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
     void createAccount_withBalanceParam() throws Exception {
@@ -88,6 +95,27 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.value()))
                 .andExpect(jsonPath("$.message").value(errorMessage))
                 .andExpect(jsonPath("$.path").value("/api/accounts"));
+    }
+
+    @Test
+    void getAccounts_ok() throws Exception {
+        final var accounts = TestUtils.randomAccounts();
+        doReturn(accounts).when(accountService).findAccounts();
+        final var responseBodyJson = mockMvc.perform(get("/api/accounts"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        final var accountsDto = objectMapper.readValue(responseBodyJson, AccountsDto.class);
+        final var accountDtoList = accountsDto.data();
+        assertEquals(accounts.size(), accountDtoList.size());
+        for (int i = 0; i < accounts.size(); i++) {
+            final var currentAccount = accounts.get(i);
+            final var currentAccountDto = accountDtoList.get(i);
+            assertEquals(currentAccount.getNumber(), currentAccountDto.number());
+            assertEquals(currentAccount.getCurrency(), currentAccountDto.currency());
+        }
     }
 
     private static class ZeroBalanceMatcher implements ArgumentMatcher<BigDecimal> {

@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import spaceurgent.banking.dto.AccountDetailsDto;
+import spaceurgent.banking.dto.AccountsDto;
 import spaceurgent.banking.dto.ErrorDto;
 import spaceurgent.banking.exception.InvalidAmountException;
 import spaceurgent.banking.service.AccountService;
@@ -28,6 +30,11 @@ public class AccountController {
     @PostMapping
     public AccountDetailsDto createAccount(@RequestParam(name = "balance", defaultValue = "0.00") BigDecimal balance) {
         return AccountDetailsDto.from(accountService.createAccount(balance));
+    }
+
+    @GetMapping
+    public AccountsDto getAccounts() {
+        return AccountsDto.from(accountService.findAccounts());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
