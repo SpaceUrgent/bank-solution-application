@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import spaceurgent.banking.TestUtils;
-import spaceurgent.banking.dto.AccountDetailsDto;
 import spaceurgent.banking.dto.AccountsDto;
 import spaceurgent.banking.exception.AccountNotFoundException;
 import spaceurgent.banking.exception.InvalidAmountException;
@@ -22,6 +21,7 @@ import spaceurgent.banking.service.AccountService;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -145,6 +145,33 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.code").value(HttpStatus.NOT_FOUND.value()))
                 .andExpect(jsonPath("$.message").value(errorMessage))
                 .andExpect(jsonPath("$.path").value("/api/accounts/%s".formatted(TEST_ACCOUNT_NUMBER)));
+    }
+
+    @Test
+    void depositToAccount_ok() throws Exception {
+        final var depositAmount = BigDecimal.valueOf(100.00);
+        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.valueOf(0.00));
+        account.deposit(depositAmount);
+        doReturn(account).when(accountService).depositToAccount(eq(TEST_ACCOUNT_NUMBER), eq(depositAmount));
+        mockMvc.perform(post("/api/accounts/{accountNumber}/deposit", TEST_ACCOUNT_NUMBER)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("amount", depositAmount.toString()))
+                .andExpect(jsonPath("$.number").value(TEST_ACCOUNT_NUMBER))
+                .andExpect(jsonPath("$.currency").value(account.getCurrency().name()))
+                .andExpect(jsonPath("$.balance").value(account.getBalance().doubleValue()));
+    }
+
+    @Test
+    void depositToAccount_withoutAmount_returnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/accounts/{accountNumber}/deposit", TEST_ACCOUNT_NUMBER)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.timestamp", validErrorTimestamp()))
+                .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.value()))
+                .andExpect(jsonPath("$.message").value("Required parameter 'amount' is not present."))
+                .andExpect(jsonPath("$.path").value("/api/accounts/%s/deposit".formatted(TEST_ACCOUNT_NUMBER)));
     }
 
     private static class ZeroBalanceMatcher implements ArgumentMatcher<BigDecimal> {

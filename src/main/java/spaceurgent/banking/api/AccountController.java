@@ -3,6 +3,7 @@ package spaceurgent.banking.api;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,6 +45,12 @@ public class AccountController {
         return AccountDetailsDto.from(accountService.findAccount(accountNumber));
     }
 
+    @PostMapping("/{accountNumber}/deposit")
+    public AccountDetailsDto depositToAccount(@PathVariable String accountNumber,
+                                              @RequestParam(name = "amount") BigDecimal amount) {
+        return AccountDetailsDto.from(accountService.depositToAccount(accountNumber, amount));
+    }
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(value = {InvalidAmountException.class})
     public ErrorDto handleBadRequestException(Exception exception,
@@ -60,5 +67,17 @@ public class AccountController {
         final var requestPath = ServletUriComponentsBuilder.fromRequest(request)
                 .build().getPath();
         return new ErrorDto(HttpStatus.NOT_FOUND.value(), exception.getMessage(), requestPath);
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(value = Exception.class)
+    public ErrorDto handle(MissingServletRequestParameterException exception,
+                           HttpServletRequest request) {
+        final var requestPath = ServletUriComponentsBuilder.fromRequest(request)
+                .build().getPath();
+        return new ErrorDto(
+                HttpStatus.BAD_REQUEST.value(),
+                exception.getBody().getDetail(),
+                requestPath);
     }
 }
