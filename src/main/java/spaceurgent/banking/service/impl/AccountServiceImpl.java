@@ -8,6 +8,7 @@ import spaceurgent.banking.service.AccountService;
 import spaceurgent.banking.utils.AccountNumberGenerator;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
@@ -22,5 +23,10 @@ public class AccountServiceImpl implements AccountService {
         requireNonNull(initialBalance, "Initial balance is required");
         final var accountNumber = accountNumberGenerator.nextAccountNumber();
         return accountRepository.save(new Account(accountNumber, initialBalance));
+    }
+
+    @Override
+    public List<Account> findAccounts() {
+        return accountRepository.findAll();
     }
 }

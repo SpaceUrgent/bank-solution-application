@@ -1,8 +1,6 @@
 package spaceurgent.banking.dto;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import spaceurgent.banking.model.Account;
 
 import java.math.BigDecimal;
