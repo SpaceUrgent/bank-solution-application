@@ -8,7 +8,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.AccessLevel;
@@ -52,14 +51,6 @@ public class Account {
 
     public Account(String accountNumber, BigDecimal initialBalance) {
         requireNonNull(accountNumber, "Account number is required");
-        requireNonNull(initialBalance, "Initial balance is required");
-        if (initialBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidAmountException("Initial balance can't be less than 0");
-        }
-        this.balance = initialBalance.setScale(BALANCE_SCALE, RoundingMode.FLOOR);
-    }
-
-    public Account(BigDecimal initialBalance) {
         requireNonNull(initialBalance, "Initial balance is required");
         if (initialBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new InvalidAmountException("Initial balance can't be less than 0");
