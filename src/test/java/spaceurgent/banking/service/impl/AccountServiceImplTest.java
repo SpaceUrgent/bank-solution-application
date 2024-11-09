@@ -90,6 +90,29 @@ class AccountServiceImplTest {
         assertEquals("Account with number '%s' not found".formatted(TEST_ACCOUNT_NUMBER), exception.getMessage());
     }
 
+    @Test
+    void withdrawFromAccount_ok() {
+        final var initialBalance = BigDecimal.valueOf(100);
+        final var account = new Account(TEST_ACCOUNT_NUMBER, initialBalance);
+        final var withdrawAmount = BigDecimal.valueOf(10);
+        final var expectedBalance = initialBalance.subtract(withdrawAmount);
+        doReturn(Optional.of(account)).when(accountRepository).findByNumber(eq(TEST_ACCOUNT_NUMBER));
+        doAnswer(invocation -> invocation.getArguments()[0]).when(accountRepository).save(any());
+        final var updatedAccount = accountService.withdrawFromAccount(TEST_ACCOUNT_NUMBER, withdrawAmount);
+        assertEquals(expectedBalance, updatedAccount.getBalance());
+    }
+
+    @Test
+    void withdrawFromAccount_withNonExistingNumber() {
+        final var withdrawAmount = BigDecimal.valueOf(10);
+        doReturn(Optional.empty()).when(accountRepository).findByNumber(any());
+        final var exception = assertThrows(
+                AccountNotFoundException.class,
+                () -> accountService.withdrawFromAccount(TEST_ACCOUNT_NUMBER, withdrawAmount)
+        );
+        assertEquals("Account with number '%s' not found".formatted(TEST_ACCOUNT_NUMBER), exception.getMessage());
+    }
+
     private List<Account> randomAccounts() {
         return IntStream.range(0, 10)
                 .mapToObj(index -> new Account(String.valueOf(index), BigDecimal.valueOf(index)))

@@ -14,4 +14,6 @@ public interface AccountService {
     Account findAccount(String accountNumber);
 
     Account depositToAccount(String accountNumber, BigDecimal amount);
+
+    Account withdrawFromAccount(String accountNumber, BigDecimal amount);
 }

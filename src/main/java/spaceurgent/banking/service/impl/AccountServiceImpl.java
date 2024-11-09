@@ -33,18 +33,28 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account findAccount(String accountNumber) {
-        requireNonNull(accountNumber, "Account number is required");
-        return accountRepository.findByNumber(accountNumber)
-                .orElseThrow(() -> new AccountNotFoundException("Account with number '%s' not found".formatted(accountNumber)));
+        return findAccountOrThrow(accountNumber);
     }
 
     @Override
     public Account depositToAccount(String accountNumber, BigDecimal amount) {
-        requireNonNull(accountNumber, "Account number is required");
         requireNonNull(accountNumber, "Amount is required");
-        final var account = accountRepository.findByNumber(accountNumber)
-                .orElseThrow(() -> new AccountNotFoundException("Account with number '%s' not found".formatted(accountNumber)));
+        final var account = findAccountOrThrow(accountNumber);
         account.deposit(amount);
         return accountRepository.save(account);
+    }
+
+    @Override
+    public Account withdrawFromAccount(String accountNumber, BigDecimal amount) {
+        requireNonNull(accountNumber, "Amount is required");
+        final var account = findAccountOrThrow(accountNumber);
+        account.withdraw(amount);
+        return accountRepository.save(account);
+    }
+
+    private Account findAccountOrThrow(String accountNumber) {
+        requireNonNull(accountNumber, "Account number is required");
+        return accountRepository.findByNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException("Account with number '%s' not found".formatted(accountNumber)));
     }
 }
