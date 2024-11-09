@@ -23,7 +23,7 @@ import static java.util.Objects.requireNonNull;
 
 @Entity
 @Table(name = "accounts")
-@Getter(value = AccessLevel.PROTECTED)
+@Getter(value = AccessLevel.PUBLIC)
 @Setter(value = AccessLevel.PROTECTED)
 @EqualsAndHashCode
 @ToString
@@ -45,7 +45,7 @@ public class Account {
 
     public Account(BigDecimal initialBalance) {
         requireNonNull(initialBalance, "Initial balance is required");
-        if (initialBalance.compareTo(BigDecimal.ZERO) <= 0) {
+        if (initialBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new InvalidAmountException("Initial balance can't be less than 0");
         }
         this.balance = initialBalance.setScale(BALANCE_SCALE, RoundingMode.FLOOR);
