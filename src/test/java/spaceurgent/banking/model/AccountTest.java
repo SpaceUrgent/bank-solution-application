@@ -61,6 +61,16 @@ class AccountTest {
         assertThrows(NullPointerException.class, () -> account.deposit(null));
     }
 
+    @Test
+    void deposit_withNegativeAmount() {
+        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.ZERO);
+        final var exception = assertThrows(
+                InvalidAmountException.class,
+                () -> account.deposit(BigDecimal.valueOf(-1))
+        );
+        assertEquals("Transfer amount must be greater than 0", exception.getMessage());
+    }
+
     @ParameterizedTest
     @ValueSource(doubles = {-100, -10.231, 0, 0.009})
     void deposit_withInvalidAmount(Double doubleAmountValue) {
@@ -71,5 +81,42 @@ class AccountTest {
                 () -> account.deposit(depositAmount)
         );
         assertEquals("Transfer amount must be greater than 0", exception.getMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(doubles = {10, 10.111, 10.119, 20, 100})
+    void withdraw_withValidAmount(Double doubleAmountValue) {
+        final var initialBalance = BigDecimal.valueOf(100);
+        final var account = new Account(TEST_ACCOUNT_NUMBER, initialBalance);
+        final var withdrawAmount = BigDecimal.valueOf(doubleAmountValue).setScale(2, RoundingMode.FLOOR);
+        final var expectedBalance = initialBalance.subtract(withdrawAmount);
+        account.withdraw(withdrawAmount);
+        assertEquals(expectedBalance, account.getBalance());
+    }
+
+    @Test
+    void withdraw_withNullAmount() {
+        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.ZERO);
+        assertThrows(NullPointerException.class, () -> account.withdraw(null));
+    }
+
+    @Test
+    void withdraw_withNegativeAmount() {
+        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.valueOf(100));
+        final var exception = assertThrows(
+                InvalidAmountException.class,
+                () -> account.withdraw(BigDecimal.valueOf(-1))
+        );
+        assertEquals("Transfer amount must be greater than 0", exception.getMessage());
+    }
+
+    @Test
+    void withdraw_withAmountExceedBalance() {
+        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.ZERO);
+        final var exception = assertThrows(
+                InvalidAmountException.class,
+                () -> account.withdraw(BigDecimal.valueOf(0.01))
+        );
+        assertEquals("Withdraw amount exceeds balance", exception.getMessage());
     }
 }

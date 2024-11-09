@@ -64,6 +64,18 @@ public class Account {
         this.balance = this.balance.add(amount).setScale(BALANCE_SCALE, RoundingMode.FLOOR);
     }
 
+    public void withdraw(BigDecimal amount) {
+        validateWithdrawAmount(amount);
+        this.balance = this.balance.subtract(amount.setScale(BALANCE_SCALE, RoundingMode.FLOOR));
+    }
+
+    private void validateWithdrawAmount(BigDecimal amount) {
+        validateTransferAmount(amount);
+        if (this.balance.compareTo(amount) < 0) {
+            throw new InvalidAmountException("Withdraw amount exceeds balance");
+        }
+    }
+
     private void validateTransferAmount(BigDecimal amount) {
         requireNonNull(amount, "Amount is required");
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
