@@ -7,17 +7,17 @@ import java.math.BigDecimal;
 
 import static java.util.Objects.requireNonNull;
 
-public record AccountDto(String number,
-                         Currency currency,
-                         BigDecimal balance) {
-    public AccountDto {
+public record AccountDetailsDto(String number,
+                                Currency currency,
+                                BigDecimal balance) {
+    public AccountDetailsDto {
         requireNonNull(number, "Number is required");
         requireNonNull(currency, "Currency is required");
         requireNonNull(balance, "Balance is required");
     }
 
-    public static AccountDto from(Account account) {
+    public static AccountDetailsDto from(Account account) {
         requireNonNull(account, "Account is required");
-        return new AccountDto(account.getNumber(), account.getCurrency(), account.getBalance());
+        return new AccountDetailsDto(account.getNumber(), account.getCurrency(), account.getBalance());
     }
 }
