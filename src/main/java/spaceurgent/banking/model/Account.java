@@ -55,6 +55,7 @@ public class Account {
         if (initialBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new InvalidAmountException("Initial balance can't be less than 0");
         }
+        this.number = accountNumber;
         this.balance = initialBalance.setScale(BALANCE_SCALE, RoundingMode.FLOOR);
     }
 }

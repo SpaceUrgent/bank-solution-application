@@ -9,9 +9,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static spaceurgent.banking.TestConstants.TEST_ACCOUNT_NUMBER;
 
 class AccountTest {
-    private final static String TEST_ACCOUNT_NUMBER = "26000000000000";
     private final static Currency DEFAULT_CURRENCY = Currency.UAH;
 
     @ParameterizedTest
@@ -19,6 +19,7 @@ class AccountTest {
     void createAccount_withValidInitialBalance(Double initialBalance) {
         final var expectedBalance = BigDecimal.valueOf(initialBalance).setScale(2, RoundingMode.FLOOR);
         final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.valueOf(initialBalance));
+        assertEquals(TEST_ACCOUNT_NUMBER, account.getNumber());
         assertEquals(expectedBalance, account.getBalance(), "Account balance differs from initial");
         assertEquals(DEFAULT_CURRENCY, account.getCurrency(), "Incorrect default currency");
     }
