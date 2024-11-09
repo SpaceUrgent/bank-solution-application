@@ -12,10 +12,11 @@ class AccountNumberGeneratorTest {
 
     @Test
     void nextAccountNumber() {
+        final var accountNumberGenerator = new AccountNumberGenerator();
         final var invocationsTotal = 100;
         final var accountNumberSet = new HashSet<String>();
         for (int i = 0; i < invocationsTotal; i++) {
-            var accountNumber = AccountNumberGenerator.nextAccountNumber();
+            var accountNumber = accountNumberGenerator.nextAccountNumber();
             assertTrue(accountNumber.matches(ACCOUNT_NUMBER_REGEX));
             accountNumberSet.add(accountNumber);
         }

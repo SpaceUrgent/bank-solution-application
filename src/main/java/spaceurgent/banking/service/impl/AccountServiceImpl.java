@@ -15,11 +15,12 @@ import static java.util.Objects.requireNonNull;
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
+    private final AccountNumberGenerator accountNumberGenerator;
 
     @Override
     public Account createAccount(BigDecimal initialBalance) {
         requireNonNull(initialBalance, "Initial balance is required");
-        final var accountNumber = AccountNumberGenerator.nextAccountNumber();
+        final var accountNumber = accountNumberGenerator.nextAccountNumber();
         return accountRepository.save(new Account(accountNumber, initialBalance));
     }
 }
