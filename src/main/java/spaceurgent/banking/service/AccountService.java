@@ -1,5 +1,6 @@
 package spaceurgent.banking.service;
 
+import spaceurgent.banking.dto.TransferRequestDto;
 import spaceurgent.banking.model.Account;
 
 import java.math.BigDecimal;
@@ -16,4 +17,6 @@ public interface AccountService {
     Account depositToAccount(String accountNumber, BigDecimal amount);
 
     Account withdrawFromAccount(String accountNumber, BigDecimal amount);
+
+    Account transferToAccount(TransferRequestDto transferRequest);
 }

@@ -2,6 +2,8 @@ package spaceurgent.banking.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import spaceurgent.banking.dto.TransferRequestDto;
 import spaceurgent.banking.exception.AccountNotFoundException;
 import spaceurgent.banking.model.Account;
 import spaceurgent.banking.repository.AccountRepository;
@@ -50,6 +52,18 @@ public class AccountServiceImpl implements AccountService {
         final var account = findAccountOrThrow(accountNumber);
         account.withdraw(amount);
         return accountRepository.save(account);
+    }
+
+    @Transactional
+    @Override
+    public Account transferToAccount(TransferRequestDto transferRequest) {
+        requireNonNull(transferRequest, "Transfer request is required");
+        final var sourceAccount = findAccountOrThrow(transferRequest.getSourceAccountNumber());
+        final var targetAccount = findAccountOrThrow(transferRequest.getTargetAccountNumber());
+        sourceAccount.withdraw(transferRequest.getAmount());
+        targetAccount.deposit(transferRequest.getAmount());
+        accountRepository.saveAll(List.of(sourceAccount, targetAccount));
+        return sourceAccount;
     }
 
     private Account findAccountOrThrow(String accountNumber) {
