@@ -11,12 +11,9 @@ import spaceurgent.banking.repository.AccountRepository;
 import spaceurgent.banking.service.AccountService;
 import spaceurgent.banking.service.ValidationService;
 import spaceurgent.banking.utils.AccountNumberGenerator;
-import spaceurgent.banking.validation.Validator;
 
 import java.math.BigDecimal;
 import java.util.List;
-
-import static java.util.Objects.requireNonNull;
 
 @Service
 @RequiredArgsConstructor
