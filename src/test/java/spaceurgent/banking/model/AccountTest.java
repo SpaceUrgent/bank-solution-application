@@ -3,7 +3,7 @@ package spaceurgent.banking.model;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import spaceurgent.banking.exception.InvalidAmountException;
+import spaceurgent.banking.exception.AmountExceedsBalanceException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -38,7 +38,7 @@ class AccountTest {
     void createAccount_withNegativeInitialBalance_throws() {
         final var negativeInitialBalance = BigDecimal.valueOf(-1L);
         final var exception = assertThrows(
-                InvalidAmountException.class,
+                IllegalArgumentException.class,
                 () -> new Account(TEST_ACCOUNT_NUMBER, negativeInitialBalance)
         );
         assertEquals("Initial balance can't be less than 0", exception.getMessage());
@@ -65,7 +65,7 @@ class AccountTest {
     void deposit_withNegativeAmount() {
         final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.ZERO);
         final var exception = assertThrows(
-                InvalidAmountException.class,
+                IllegalArgumentException.class,
                 () -> account.deposit(BigDecimal.valueOf(-1))
         );
         assertEquals("Transfer amount must be greater than 0", exception.getMessage());
@@ -77,7 +77,7 @@ class AccountTest {
         final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.ZERO);
         final var depositAmount = BigDecimal.valueOf(doubleAmountValue).setScale(2, RoundingMode.FLOOR);
         final var exception = assertThrows(
-                InvalidAmountException.class,
+                IllegalArgumentException.class,
                 () -> account.deposit(depositAmount)
         );
         assertEquals("Transfer amount must be greater than 0", exception.getMessage());
@@ -104,7 +104,7 @@ class AccountTest {
     void withdraw_withNegativeAmount() {
         final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.valueOf(100));
         final var exception = assertThrows(
-                InvalidAmountException.class,
+                IllegalArgumentException.class,
                 () -> account.withdraw(BigDecimal.valueOf(-1))
         );
         assertEquals("Transfer amount must be greater than 0", exception.getMessage());
@@ -114,7 +114,7 @@ class AccountTest {
     void withdraw_withAmountExceedBalance() {
         final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.ZERO);
         final var exception = assertThrows(
-                InvalidAmountException.class,
+                AmountExceedsBalanceException.class,
                 () -> account.withdraw(BigDecimal.valueOf(0.01))
         );
         assertEquals("Withdraw amount exceeds balance", exception.getMessage());

@@ -9,18 +9,19 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import spaceurgent.banking.exception.InvalidAmountException;
+import spaceurgent.banking.exception.AmountExceedsBalanceException;
+import spaceurgent.banking.utils.AmountUtils;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 import static java.util.Objects.requireNonNull;
+import static spaceurgent.banking.utils.AmountUtils.isNegativeOrZero;
+import static spaceurgent.banking.utils.AmountUtils.round;
 
 @Entity
 @Table(
@@ -43,43 +44,40 @@ public class Account {
     @Column(nullable = false)
     private BigDecimal balance;
 
-    @Transient
-    private final static int BALANCE_SCALE = 2;
-
     protected Account() {
     }
 
     public Account(String accountNumber, BigDecimal initialBalance) {
         requireNonNull(accountNumber, "Account number is required");
         requireNonNull(initialBalance, "Initial balance is required");
-        if (initialBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidAmountException("Initial balance can't be less than 0");
+        if (AmountUtils.isNegative(initialBalance)) {
+            throw new IllegalArgumentException("Initial balance can't be less than 0");
         }
         this.number = accountNumber;
-        this.balance = initialBalance.setScale(BALANCE_SCALE, RoundingMode.FLOOR);
+        this.balance = round(initialBalance);
     }
 
     public void deposit(BigDecimal amount) {
         validateTransferAmount(amount);
-        this.balance = this.balance.add(amount).setScale(BALANCE_SCALE, RoundingMode.FLOOR);
+        this.balance = round(this.balance.add(amount));
     }
 
     public void withdraw(BigDecimal amount) {
-        validateWithdrawAmount(amount);
-        this.balance = this.balance.subtract(amount.setScale(BALANCE_SCALE, RoundingMode.FLOOR));
+        validateTransferAmount(amount);
+        checkBalanceCoverWithdraw(amount);
+        this.balance = round(this.balance.subtract(amount));
     }
 
-    private void validateWithdrawAmount(BigDecimal amount) {
-        validateTransferAmount(amount);
+    private void checkBalanceCoverWithdraw(BigDecimal amount) {
         if (this.balance.compareTo(amount) < 0) {
-            throw new InvalidAmountException("Withdraw amount exceeds balance");
+            throw new AmountExceedsBalanceException("Withdraw amount exceeds balance");
         }
     }
 
     private void validateTransferAmount(BigDecimal amount) {
         requireNonNull(amount, "Amount is required");
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException("Transfer amount must be greater than 0");
+        if (isNegativeOrZero(amount)) {
+            throw new IllegalArgumentException("Transfer amount must be greater than 0");
         }
     }
 }
