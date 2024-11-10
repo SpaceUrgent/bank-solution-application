@@ -77,29 +77,28 @@ public class AccountController {
     @ExceptionHandler(value = {AmountExceedsBalanceException.class, ValidationException.class})
     public ErrorDto handleBadRequestException(Exception exception,
                                               HttpServletRequest request) {
-        final var requestPath = ServletUriComponentsBuilder.fromRequest(request)
-                .build().getPath();
-        return new ErrorDto(HttpStatus.BAD_REQUEST.value(), exception.getMessage(), requestPath);
+        return new ErrorDto(HttpStatus.BAD_REQUEST.value(), exception.getMessage(), getPath(request));
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(value = AccountNotFoundException.class)
-    public ErrorDto handleAccountNotFoundException(AccountNotFoundException exception,
+    public ErrorDto handleAccountNotFoundException(Exception exception,
                                                    HttpServletRequest request) {
-        final var requestPath = ServletUriComponentsBuilder.fromRequest(request)
-                .build().getPath();
-        return new ErrorDto(HttpStatus.NOT_FOUND.value(), exception.getMessage(), requestPath);
+        return new ErrorDto(HttpStatus.NOT_FOUND.value(), exception.getMessage(), getPath(request));
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(value = Exception.class)
-    public ErrorDto handle(MissingServletRequestParameterException exception,
-                           HttpServletRequest request) {
-        final var requestPath = ServletUriComponentsBuilder.fromRequest(request)
-                .build().getPath();
+    public ErrorDto handleMissingParameterException(MissingServletRequestParameterException exception,
+                                                    HttpServletRequest request) {
         return new ErrorDto(
                 HttpStatus.BAD_REQUEST.value(),
                 exception.getBody().getDetail(),
-                requestPath);
+                getPath(request));
+    }
+
+    private String getPath(HttpServletRequest request) {
+        return ServletUriComponentsBuilder.fromRequest(request)
+                .build().getPath();
     }
 }
