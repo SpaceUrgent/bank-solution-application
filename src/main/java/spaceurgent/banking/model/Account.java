@@ -64,14 +64,10 @@ public class Account {
 
     public void withdraw(BigDecimal amount) throws AmountExceedsBalanceException {
         validateTransferAmount(amount);
-        checkBalanceCoverWithdraw(amount);
-        this.balance = round(this.balance.subtract(amount));
-    }
-
-    private void checkBalanceCoverWithdraw(BigDecimal amount) throws AmountExceedsBalanceException {
-        if (this.balance.compareTo(amount) < 0) {
+        if (balanceLessThan(amount)) {
             throw new AmountExceedsBalanceException("Withdraw amount exceeds balance");
         }
+        this.balance = round(this.balance.subtract(amount));
     }
 
     private void validateTransferAmount(BigDecimal amount) {
@@ -79,5 +75,9 @@ public class Account {
         if (isNegativeOrZero(amount)) {
             throw new IllegalArgumentException("Transfer amount must be greater than 0");
         }
+    }
+
+    private boolean balanceLessThan(BigDecimal amount) {
+        return this.balance.compareTo(amount) < 0;
     }
 }
