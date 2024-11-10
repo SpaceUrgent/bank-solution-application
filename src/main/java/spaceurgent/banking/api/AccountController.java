@@ -23,6 +23,11 @@ import spaceurgent.banking.service.AccountService;
 
 import java.math.BigDecimal;
 
+import static spaceurgent.banking.api.ApiConstants.AMOUNT_PARAMETER_NAME;
+import static spaceurgent.banking.api.ApiConstants.BALANCE_DEFAULT_VALUE;
+import static spaceurgent.banking.api.ApiConstants.BALANCE_PARAMETER_NAME;
+import static spaceurgent.banking.api.ApiConstants.TARGET_ACCOUNT_NUMBER_PARAMETER_NAME;
+
 @RestController
 @RequestMapping("/api/accounts")
 @RequiredArgsConstructor
@@ -32,7 +37,8 @@ public class AccountController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public AccountDetailsDto createAccount(@RequestParam(name = "balance", defaultValue = "0.00") BigDecimal balance) {
+    public AccountDetailsDto createAccount(@RequestParam(name = BALANCE_PARAMETER_NAME, defaultValue = BALANCE_DEFAULT_VALUE)
+                                           BigDecimal balance) {
         return AccountDetailsDto.from(accountService.createAccount(balance));
     }
 
@@ -48,20 +54,20 @@ public class AccountController {
 
     @PostMapping("/{accountNumber}/deposit")
     public AccountDetailsDto depositToAccount(@PathVariable String accountNumber,
-                                              @RequestParam(name = "amount") BigDecimal amount) {
+                                              @RequestParam(name = AMOUNT_PARAMETER_NAME) BigDecimal amount) {
         return AccountDetailsDto.from(accountService.depositToAccount(accountNumber, amount));
     }
 
     @PostMapping("/{accountNumber}/withdraw")
     public AccountDetailsDto withdrawFromAccount(@PathVariable String accountNumber,
-                                                 @RequestParam(name = "amount") BigDecimal amount) {
+                                                 @RequestParam(name = AMOUNT_PARAMETER_NAME) BigDecimal amount) {
         return AccountDetailsDto.from(accountService.withdrawFromAccount(accountNumber, amount));
     }
 
     @PostMapping("/{sourceAccountNumber}/transfer")
     public AccountDetailsDto transferToAccount(@PathVariable String sourceAccountNumber,
-                                               @RequestParam(name = "targetAccountNumber") String targetAccountNumber,
-                                               @RequestParam(name = "amount") BigDecimal amount) {
+                                               @RequestParam(name = TARGET_ACCOUNT_NUMBER_PARAMETER_NAME) String targetAccountNumber,
+                                               @RequestParam(name = AMOUNT_PARAMETER_NAME) BigDecimal amount) {
         final var transferRequestDto = new TransferRequestDto(sourceAccountNumber, targetAccountNumber, amount);
         return AccountDetailsDto.from(accountService.transferToAccount(transferRequestDto));
     }
