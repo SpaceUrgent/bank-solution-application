@@ -18,7 +18,7 @@ import spaceurgent.banking.TestUtils;
 import spaceurgent.banking.dto.AccountsDto;
 import spaceurgent.banking.dto.TransferRequestDto;
 import spaceurgent.banking.exception.AccountNotFoundException;
-import spaceurgent.banking.exception.InvalidAmountException;
+import spaceurgent.banking.exception.ValidationException;
 import spaceurgent.banking.model.Account;
 import spaceurgent.banking.service.AccountService;
 
@@ -85,7 +85,7 @@ class AccountControllerTest {
     void createAccount_withNegativeBalanceParam_returns400() throws Exception {
         final var negativeBalance = BigDecimal.valueOf(-100);
         final var errorMessage = "Balance can't be negative";
-        doThrow(new InvalidAmountException(errorMessage)).when(accountService).createAccount(argThat(new NegativeBalanceMatcher()));
+        doThrow(new ValidationException(errorMessage)).when(accountService).createAccount(argThat(new NegativeBalanceMatcher()));
         mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param(BALANCE_PARAMETER_NAME, negativeBalance.toString()))

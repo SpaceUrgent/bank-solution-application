@@ -18,7 +18,8 @@ import spaceurgent.banking.dto.AccountsDto;
 import spaceurgent.banking.dto.ErrorDto;
 import spaceurgent.banking.dto.TransferRequestDto;
 import spaceurgent.banking.exception.AccountNotFoundException;
-import spaceurgent.banking.exception.InvalidAmountException;
+import spaceurgent.banking.exception.AmountExceedsBalanceException;
+import spaceurgent.banking.exception.ValidationException;
 import spaceurgent.banking.service.AccountService;
 
 import java.math.BigDecimal;
@@ -73,7 +74,7 @@ public class AccountController {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(value = {InvalidAmountException.class})
+    @ExceptionHandler(value = {AmountExceedsBalanceException.class, ValidationException.class})
     public ErrorDto handleBadRequestException(Exception exception,
                                               HttpServletRequest request) {
         final var requestPath = ServletUriComponentsBuilder.fromRequest(request)
