@@ -9,6 +9,7 @@ import spaceurgent.banking.dto.TransferRequestDto;
 import spaceurgent.banking.exception.AccountNotFoundException;
 import spaceurgent.banking.model.Account;
 import spaceurgent.banking.repository.AccountRepository;
+import spaceurgent.banking.service.ValidationService;
 import spaceurgent.banking.utils.AccountNumberGenerator;
 import spaceurgent.banking.validation.Validator;
 
@@ -34,9 +35,7 @@ class AccountServiceImplTest {
     @Mock
     private AccountNumberGenerator accountNumberGenerator;
     @Mock
-    private Validator<String> accountNumberValidator;
-    @Mock
-    private Validator<TransferRequestDto> transferRequestDtoValidator;
+    private ValidationService validationService;
     @InjectMocks
     private AccountServiceImpl accountService;
 

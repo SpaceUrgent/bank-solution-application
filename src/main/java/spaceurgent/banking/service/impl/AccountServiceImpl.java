@@ -8,6 +8,7 @@ import spaceurgent.banking.exception.AccountNotFoundException;
 import spaceurgent.banking.model.Account;
 import spaceurgent.banking.repository.AccountRepository;
 import spaceurgent.banking.service.AccountService;
+import spaceurgent.banking.service.ValidationService;
 import spaceurgent.banking.utils.AccountNumberGenerator;
 import spaceurgent.banking.validation.Validator;
 
@@ -19,14 +20,13 @@ import static java.util.Objects.requireNonNull;
 @Service
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
+    private final ValidationService validationService;
     private final AccountRepository accountRepository;
     private final AccountNumberGenerator accountNumberGenerator;
-    private final Validator<String> accountNumberValidator;
-    private final Validator<TransferRequestDto> transferRequestDtoValidator;
 
     @Override
     public Account createAccount(BigDecimal initialBalance) {
-        requireNonNull(initialBalance, "Initial balance is required");
+        validationService.validateBalanceAmount(initialBalance);
         final var accountNumber = accountNumberGenerator.nextAccountNumber();
         return accountRepository.save(new Account(accountNumber, initialBalance));
     }
@@ -38,14 +38,14 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account findAccount(String accountNumber) {
-        accountNumberValidator.validate(accountNumber);
+        validationService.validateAccountNumber(accountNumber);
         return findAccountOrThrow(accountNumber);
     }
 
     @Override
     public Account depositToAccount(String accountNumber, BigDecimal amount) {
-        requireNonNull(amount, "Amount is required");
-        accountNumberValidator.validate(accountNumber);
+        validationService.validateAccountNumber(accountNumber);
+        validationService.validateTransferAmount(amount);
         final var account = findAccountOrThrow(accountNumber);
         account.deposit(amount);
         return accountRepository.save(account);
@@ -53,8 +53,8 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account withdrawFromAccount(String accountNumber, BigDecimal amount) {
-        requireNonNull(amount, "Amount is required");
-        accountNumberValidator.validate(accountNumber);
+        validationService.validateAccountNumber(accountNumber);
+        validationService.validateTransferAmount(amount);
         final var account = findAccountOrThrow(accountNumber);
         account.withdraw(amount);
         return accountRepository.save(account);
@@ -63,7 +63,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     @Override
     public Account transferToAccount(TransferRequestDto transferRequest) {
-        transferRequestDtoValidator.validate(transferRequest);
+        validationService.validateTransferRequestDto(transferRequest);
         final var sourceAccount = findAccountOrThrow(transferRequest.getSourceAccountNumber());
         final var targetAccount = findAccountOrThrow(transferRequest.getTargetAccountNumber());
         sourceAccount.withdraw(transferRequest.getAmount());
