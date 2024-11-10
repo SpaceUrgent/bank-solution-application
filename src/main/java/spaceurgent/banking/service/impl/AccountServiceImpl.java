@@ -22,6 +22,7 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final AccountNumberGenerator accountNumberGenerator;
     private final Validator<String> accountNumberValidator;
+    private final Validator<TransferRequestDto> transferRequestDtoValidator;
 
     @Override
     public Account createAccount(BigDecimal initialBalance) {
@@ -62,7 +63,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     @Override
     public Account transferToAccount(TransferRequestDto transferRequest) {
-        requireNonNull(transferRequest, "Transfer request is required");
+        transferRequestDtoValidator.validate(transferRequest);
         final var sourceAccount = findAccountOrThrow(transferRequest.getSourceAccountNumber());
         final var targetAccount = findAccountOrThrow(transferRequest.getTargetAccountNumber());
         sourceAccount.withdraw(transferRequest.getAmount());

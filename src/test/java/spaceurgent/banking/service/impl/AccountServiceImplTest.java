@@ -24,7 +24,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static spaceurgent.banking.TestConstants.TEST_ACCOUNT_NUMBER;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,6 +35,8 @@ class AccountServiceImplTest {
     private AccountNumberGenerator accountNumberGenerator;
     @Mock
     private Validator<String> accountNumberValidator;
+    @Mock
+    private Validator<TransferRequestDto> transferRequestDtoValidator;
     @InjectMocks
     private AccountServiceImpl accountService;
 
