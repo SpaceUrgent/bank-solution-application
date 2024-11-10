@@ -1,6 +1,5 @@
 package spaceurgent.banking.service.impl;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +9,7 @@ import spaceurgent.banking.model.Account;
 import spaceurgent.banking.repository.AccountRepository;
 import spaceurgent.banking.service.AccountService;
 import spaceurgent.banking.utils.AccountNumberGenerator;
+import spaceurgent.banking.validation.Validator;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -21,6 +21,7 @@ import static java.util.Objects.requireNonNull;
 public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final AccountNumberGenerator accountNumberGenerator;
+    private final Validator<String> accountNumberValidator;
 
     @Override
     public Account createAccount(BigDecimal initialBalance) {
@@ -36,12 +37,14 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account findAccount(String accountNumber) {
+        accountNumberValidator.validate(accountNumber);
         return findAccountOrThrow(accountNumber);
     }
 
     @Override
     public Account depositToAccount(String accountNumber, BigDecimal amount) {
-        requireNonNull(accountNumber, "Amount is required");
+        requireNonNull(amount, "Amount is required");
+        accountNumberValidator.validate(accountNumber);
         final var account = findAccountOrThrow(accountNumber);
         account.deposit(amount);
         return accountRepository.save(account);
@@ -49,7 +52,8 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account withdrawFromAccount(String accountNumber, BigDecimal amount) {
-        requireNonNull(accountNumber, "Amount is required");
+        requireNonNull(amount, "Amount is required");
+        accountNumberValidator.validate(accountNumber);
         final var account = findAccountOrThrow(accountNumber);
         account.withdraw(amount);
         return accountRepository.save(account);
@@ -68,7 +72,6 @@ public class AccountServiceImpl implements AccountService {
     }
 
     private Account findAccountOrThrow(String accountNumber) {
-        requireNonNull(accountNumber, "Account number is required");
         return accountRepository.findByNumber(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException("Account with number '%s' not found".formatted(accountNumber)));
     }

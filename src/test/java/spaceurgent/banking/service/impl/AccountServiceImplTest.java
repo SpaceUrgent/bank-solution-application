@@ -10,6 +10,7 @@ import spaceurgent.banking.exception.AccountNotFoundException;
 import spaceurgent.banking.model.Account;
 import spaceurgent.banking.repository.AccountRepository;
 import spaceurgent.banking.utils.AccountNumberGenerator;
+import spaceurgent.banking.validation.Validator;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -33,6 +34,8 @@ class AccountServiceImplTest {
     private AccountRepository accountRepository;
     @Mock
     private AccountNumberGenerator accountNumberGenerator;
+    @Mock
+    private Validator<String> accountNumberValidator;
     @InjectMocks
     private AccountServiceImpl accountService;
 
