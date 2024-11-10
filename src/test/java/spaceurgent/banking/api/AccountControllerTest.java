@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import spaceurgent.banking.TestUtils;
 import spaceurgent.banking.dto.AccountsDto;
+import spaceurgent.banking.dto.TransferRequestDto;
 import spaceurgent.banking.exception.AccountNotFoundException;
 import spaceurgent.banking.exception.InvalidAmountException;
 import spaceurgent.banking.model.Account;
@@ -201,6 +202,56 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.value()))
                 .andExpect(jsonPath("$.message").value("Required parameter 'amount' is not present."))
                 .andExpect(jsonPath("$.path").value("/api/accounts/%s/withdraw".formatted(TEST_ACCOUNT_NUMBER)));
+    }
+
+    @Test
+    void transferToAccount_ok() throws Exception {
+        final var sourceAccountNumber = "26000000000001";
+        final var targetAccountNumber = "26000000000002";
+        final var transferAmount = BigDecimal.valueOf(10);
+        final var expectedTransferRequest = new TransferRequestDto(sourceAccountNumber, targetAccountNumber, transferAmount);
+        final var sourceAccount = new Account(sourceAccountNumber, BigDecimal.valueOf(100));
+        doReturn(sourceAccount).when(accountService).transferToAccount(expectedTransferRequest);
+        mockMvc.perform(post("/api/accounts/{accountNumber}/transfer", sourceAccountNumber)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("targetAccountNumber", targetAccountNumber)
+                .param("amount", transferAmount.toString()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.number").value(sourceAccount.getNumber()))
+                .andExpect(jsonPath("$.currency").value(sourceAccount.getCurrency().name()))
+                .andExpect(jsonPath("$.balance").value(sourceAccount.getBalance().doubleValue()));
+    }
+
+    @Test
+    void transferToAccount_withoutTargetAccountNumber_returnsBadRequest() throws Exception {
+        final var sourceAccountNumber = "26000000000001";
+        mockMvc.perform(post("/api/accounts/{accountNumber}/transfer", sourceAccountNumber)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("amount", BigDecimal.valueOf(10).toString()))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.timestamp", validErrorTimestamp()))
+                .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.value()))
+                .andExpect(jsonPath("$.message").value("Required parameter 'targetAccountNumber' is not present."))
+                .andExpect(jsonPath("$.path").value("/api/accounts/%s/transfer".formatted(sourceAccountNumber)));
+    }
+
+    @Test
+    void transferToAccount_withoutAmount_returnsBadRequest() throws Exception {
+        final var sourceAccountNumber = "26000000000001";
+        final var targetAccountNumber = "26000000000002";
+        mockMvc.perform(post("/api/accounts/{accountNumber}/transfer", sourceAccountNumber)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("targetAccountNumber", targetAccountNumber))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.timestamp", validErrorTimestamp()))
+                .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.value()))
+                .andExpect(jsonPath("$.message").value("Required parameter 'amount' is not present."))
+                .andExpect(jsonPath("$.path").value("/api/accounts/%s/transfer".formatted(sourceAccountNumber)));
     }
 
     private static class ZeroBalanceMatcher implements ArgumentMatcher<BigDecimal> {

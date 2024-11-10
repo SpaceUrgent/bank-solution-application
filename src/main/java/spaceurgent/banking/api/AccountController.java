@@ -16,6 +16,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import spaceurgent.banking.dto.AccountDetailsDto;
 import spaceurgent.banking.dto.AccountsDto;
 import spaceurgent.banking.dto.ErrorDto;
+import spaceurgent.banking.dto.TransferRequestDto;
 import spaceurgent.banking.exception.AccountNotFoundException;
 import spaceurgent.banking.exception.InvalidAmountException;
 import spaceurgent.banking.service.AccountService;
@@ -55,6 +56,14 @@ public class AccountController {
     public AccountDetailsDto withdrawFromAccount(@PathVariable String accountNumber,
                                                  @RequestParam(name = "amount") BigDecimal amount) {
         return AccountDetailsDto.from(accountService.withdrawFromAccount(accountNumber, amount));
+    }
+
+    @PostMapping("/{sourceAccountNumber}/transfer")
+    public AccountDetailsDto transferToAccount(@PathVariable String sourceAccountNumber,
+                                               @RequestParam(name = "targetAccountNumber") String targetAccountNumber,
+                                               @RequestParam(name = "amount") BigDecimal amount) {
+        final var transferRequestDto = new TransferRequestDto(sourceAccountNumber, targetAccountNumber, amount);
+        return AccountDetailsDto.from(accountService.transferToAccount(transferRequestDto));
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
