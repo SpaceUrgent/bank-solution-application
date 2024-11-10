@@ -33,12 +33,12 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public List<Account> findAccounts() {
+    public List<Account> getAccounts() {
         return accountRepository.findAll();
     }
 
     @Override
-    public Account findAccount(String accountNumber) {
+    public Account getAccount(String accountNumber) {
         validationService.validateAccountNumber(accountNumber);
         return findAccountOrThrow(accountNumber);
     }

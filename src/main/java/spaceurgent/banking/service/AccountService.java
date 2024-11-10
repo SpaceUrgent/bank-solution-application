@@ -11,9 +11,9 @@ public interface AccountService {
 
     Account createAccount(BigDecimal initialBalance);
 
-    List<Account> findAccounts();
+    List<Account> getAccounts();
 
-    Account findAccount(String accountNumber);
+    Account getAccount(String accountNumber);
 
     Account depositToAccount(String accountNumber, BigDecimal amount);
 

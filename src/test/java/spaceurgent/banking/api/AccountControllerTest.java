@@ -102,7 +102,7 @@ class AccountControllerTest {
     @DisplayName("Get accounts returns 200")
     void getAccounts_returns200() throws Exception {
         final var accounts = TestUtils.randomAccounts();
-        doReturn(accounts).when(accountService).findAccounts();
+        doReturn(accounts).when(accountService).getAccounts();
         final var responseBodyJson = mockMvc.perform(get("/api/accounts"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -124,7 +124,7 @@ class AccountControllerTest {
     @DisplayName("Get account returns 200")
     void getAccount_returns200() throws Exception {
         final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.ZERO);
-        doReturn(account).when(accountService).findAccount(eq(account.getNumber()));
+        doReturn(account).when(accountService).getAccount(eq(account.getNumber()));
         final var apiActionResult = mockMvc.perform(get("/api/accounts/{accountNumber}", account.getNumber()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
@@ -135,7 +135,7 @@ class AccountControllerTest {
     @DisplayName("Get account with non-existing account number returns 404")
     void getAccount_withNonExistingAccountNumber_returns404() throws Exception {
         final var errorMessage = "Account not found";
-        doThrow(new AccountNotFoundException(errorMessage)).when(accountService).findAccount(any());
+        doThrow(new AccountNotFoundException(errorMessage)).when(accountService).getAccount(any());
         mockMvc.perform(get("/api/accounts/{accountNumber}", TEST_ACCOUNT_NUMBER))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))

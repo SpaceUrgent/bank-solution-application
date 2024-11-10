@@ -45,12 +45,12 @@ public class AccountController {
 
     @GetMapping
     public AccountsDto getAccounts() {
-        return AccountsDto.from(accountService.findAccounts());
+        return AccountsDto.from(accountService.getAccounts());
     }
 
     @GetMapping("/{accountNumber}")
     public AccountDetailsDto getAccount(@PathVariable String accountNumber) {
-        return AccountDetailsDto.from(accountService.findAccount(accountNumber));
+        return AccountDetailsDto.from(accountService.getAccount(accountNumber));
     }
 
     @PostMapping("/{accountNumber}/deposit")

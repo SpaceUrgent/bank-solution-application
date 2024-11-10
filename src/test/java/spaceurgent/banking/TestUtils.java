@@ -1,5 +1,7 @@
 package spaceurgent.banking;
 
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import spaceurgent.banking.model.Account;
 import spaceurgent.banking.model.Currency;
 
@@ -17,5 +19,9 @@ public class TestUtils {
         return IntStream.range(0, 10)
                 .mapToObj(index -> new Account(String.valueOf(index), BigDecimal.valueOf(index)))
                 .toList();
+    }
+
+    public static Answer<?> returnInputAnswer() {
+        return (Answer<Object>) invocation -> invocation.getArguments()[0];
     }
 }
