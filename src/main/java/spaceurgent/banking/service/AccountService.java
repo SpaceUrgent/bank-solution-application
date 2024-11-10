@@ -1,6 +1,7 @@
 package spaceurgent.banking.service;
 
 import spaceurgent.banking.dto.TransferRequestDto;
+import spaceurgent.banking.exception.AmountExceedsBalanceException;
 import spaceurgent.banking.model.Account;
 
 import java.math.BigDecimal;
@@ -16,7 +17,7 @@ public interface AccountService {
 
     Account depositToAccount(String accountNumber, BigDecimal amount);
 
-    Account withdrawFromAccount(String accountNumber, BigDecimal amount);
+    Account withdrawFromAccount(String accountNumber, BigDecimal amount) throws AmountExceedsBalanceException;
 
-    Account transferToAccount(TransferRequestDto transferRequest);
+    Account transferToAccount(TransferRequestDto transferRequest) throws AmountExceedsBalanceException;
 }

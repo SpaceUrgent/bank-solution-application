@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spaceurgent.banking.dto.TransferRequestDto;
 import spaceurgent.banking.exception.AccountNotFoundException;
+import spaceurgent.banking.exception.AmountExceedsBalanceException;
 import spaceurgent.banking.model.Account;
 import spaceurgent.banking.repository.AccountRepository;
 import spaceurgent.banking.service.ValidationService;
@@ -97,7 +98,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    void withdrawFromAccount_ok() {
+    void withdrawFromAccount_ok() throws AmountExceedsBalanceException {
         final var initialBalance = BigDecimal.valueOf(100);
         final var account = new Account(TEST_ACCOUNT_NUMBER, initialBalance);
         final var withdrawAmount = BigDecimal.valueOf(10);
@@ -120,7 +121,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    void transferToAccount_ok() {
+    void transferToAccount_ok() throws AmountExceedsBalanceException {
         final var sourceAccount = new Account("26000000000001", BigDecimal.valueOf(100));
         final var targetAccount = new Account("26000000000002", BigDecimal.valueOf(0));
         final var amount = BigDecimal.valueOf(10);

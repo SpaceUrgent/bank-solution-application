@@ -62,13 +62,13 @@ public class Account {
         this.balance = round(this.balance.add(amount));
     }
 
-    public void withdraw(BigDecimal amount) {
+    public void withdraw(BigDecimal amount) throws AmountExceedsBalanceException {
         validateTransferAmount(amount);
         checkBalanceCoverWithdraw(amount);
         this.balance = round(this.balance.subtract(amount));
     }
 
-    private void checkBalanceCoverWithdraw(BigDecimal amount) {
+    private void checkBalanceCoverWithdraw(BigDecimal amount) throws AmountExceedsBalanceException {
         if (this.balance.compareTo(amount) < 0) {
             throw new AmountExceedsBalanceException("Withdraw amount exceeds balance");
         }

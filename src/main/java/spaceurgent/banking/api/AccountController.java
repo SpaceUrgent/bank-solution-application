@@ -61,14 +61,14 @@ public class AccountController {
 
     @PostMapping("/{accountNumber}/withdraw")
     public AccountDetailsDto withdrawFromAccount(@PathVariable String accountNumber,
-                                                 @RequestParam(name = AMOUNT_PARAMETER_NAME) BigDecimal amount) {
+                                                 @RequestParam(name = AMOUNT_PARAMETER_NAME) BigDecimal amount) throws AmountExceedsBalanceException {
         return AccountDetailsDto.from(accountService.withdrawFromAccount(accountNumber, amount));
     }
 
     @PostMapping("/{sourceAccountNumber}/transfer")
     public AccountDetailsDto transferToAccount(@PathVariable String sourceAccountNumber,
                                                @RequestParam(name = TARGET_ACCOUNT_NUMBER_PARAMETER_NAME) String targetAccountNumber,
-                                               @RequestParam(name = AMOUNT_PARAMETER_NAME) BigDecimal amount) {
+                                               @RequestParam(name = AMOUNT_PARAMETER_NAME) BigDecimal amount) throws AmountExceedsBalanceException {
         final var transferRequestDto = new TransferRequestDto(sourceAccountNumber, targetAccountNumber, amount);
         return AccountDetailsDto.from(accountService.transferToAccount(transferRequestDto));
     }

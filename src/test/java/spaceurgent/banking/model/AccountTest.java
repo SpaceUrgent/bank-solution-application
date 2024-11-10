@@ -85,7 +85,7 @@ class AccountTest {
 
     @ParameterizedTest
     @ValueSource(doubles = {10, 10.111, 10.119, 20, 100})
-    void withdraw_withValidAmount(Double doubleAmountValue) {
+    void withdraw_withValidAmount(Double doubleAmountValue) throws AmountExceedsBalanceException {
         final var initialBalance = BigDecimal.valueOf(100);
         final var account = new Account(TEST_ACCOUNT_NUMBER, initialBalance);
         final var withdrawAmount = BigDecimal.valueOf(doubleAmountValue).setScale(2, RoundingMode.FLOOR);

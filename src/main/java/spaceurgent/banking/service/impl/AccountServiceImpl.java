@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spaceurgent.banking.dto.TransferRequestDto;
 import spaceurgent.banking.exception.AccountNotFoundException;
+import spaceurgent.banking.exception.AmountExceedsBalanceException;
 import spaceurgent.banking.model.Account;
 import spaceurgent.banking.repository.AccountRepository;
 import spaceurgent.banking.service.AccountService;
@@ -52,7 +53,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account withdrawFromAccount(String accountNumber, BigDecimal amount) {
+    public Account withdrawFromAccount(String accountNumber, BigDecimal amount) throws AmountExceedsBalanceException {
         validationService.validateAccountNumber(accountNumber);
         validationService.validateTransferAmount(amount);
         final var account = findAccountOrThrow(accountNumber);
@@ -62,7 +63,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Transactional
     @Override
-    public Account transferToAccount(TransferRequestDto transferRequest) {
+    public Account transferToAccount(TransferRequestDto transferRequest) throws AmountExceedsBalanceException {
         validationService.validateTransferRequestDto(transferRequest);
         final var sourceAccount = findAccountOrThrow(transferRequest.getSourceAccountNumber());
         final var targetAccount = findAccountOrThrow(transferRequest.getTargetAccountNumber());
