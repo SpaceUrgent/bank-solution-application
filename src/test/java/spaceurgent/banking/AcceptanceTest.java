@@ -1,10 +1,8 @@
 package spaceurgent.banking;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -12,20 +10,20 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import spaceurgent.banking.dto.AccountDetailsDto;
 import spaceurgent.banking.model.Account;
 import spaceurgent.banking.model.Currency;
 import spaceurgent.banking.repository.AccountRepository;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static spaceurgent.banking.AcceptanceTest.ErrorTimestampMatcher.validErrorTimestamp;
+import static spaceurgent.banking.TestUtils.errorTimestampMatcher;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -44,7 +42,8 @@ public class AcceptanceTest {
     }
 
     @Test
-    void createNewAccount() throws Exception {
+    @DisplayName("Create new account and get - OK")
+    void createNewAccount_andGet_ok() throws Exception {
         final var initialBalance = BigDecimal.valueOf(100);
         final var jsonResponseBody = mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -59,10 +58,10 @@ public class AcceptanceTest {
         final var accountDetailsDto = objectMapper.readValue(jsonResponseBody, AccountDetailsDto.class);
         final var accountNumber = accountDetailsDto.number();
 
-        mockMvc.perform(get("/api/accounts/{accountNumber}", accountNumber))
+        getAccountDetails(accountNumber)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value(accountNumber))
-                .andExpect(jsonPath("$.currency").value(Currency.UAH.name()))
+                .andExpect(jsonPath("$.currency").value(accountDetailsDto.currency().name()))
                 .andExpect(jsonPath("$.balance").value(initialBalance.doubleValue()));
 
         mockMvc.perform(get("/api/accounts"))
@@ -85,7 +84,7 @@ public class AcceptanceTest {
                 .andExpect(jsonPath("$.currency").value(accountToDeposit.getCurrency().name()))
                 .andExpect(jsonPath("$.balance").value(expectedBalance.doubleValue()));
 
-        mockMvc.perform(get("/api/accounts/{accountNumber}", accountToDeposit.getNumber()))
+        getAccountDetails(accountToDeposit.getNumber())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value(accountToDeposit.getNumber()))
                 .andExpect(jsonPath("$.currency").value(accountToDeposit.getCurrency().name()))
@@ -107,7 +106,7 @@ public class AcceptanceTest {
                 .andExpect(jsonPath("$.currency").value(accountToWithdraw.getCurrency().name()))
                 .andExpect(jsonPath("$.balance").value(expectedBalance.doubleValue()));
 
-        mockMvc.perform(get("/api/accounts/{accountNumber}", accountToWithdraw.getNumber()))
+        getAccountDetails(accountToWithdraw.getNumber())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value(accountToWithdraw.getNumber()))
                 .andExpect(jsonPath("$.currency").value(accountToWithdraw.getCurrency().name()))
@@ -124,12 +123,12 @@ public class AcceptanceTest {
                         .param("amount", withdrawAmount.toString()))
                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$.timestamp").exists())
-               .andExpect(jsonPath("$.timestamp", validErrorTimestamp()))
+               .andExpect(jsonPath("$.timestamp", errorTimestampMatcher()))
                .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.value()))
                .andExpect(jsonPath("$.message").value("Withdraw amount exceeds balance"))
                .andExpect(jsonPath("$.path").value("/api/accounts/%s/withdraw".formatted(accountToWithdraw.getNumber())));
 
-       mockMvc.perform(get("/api/accounts/{accountNumber}", accountToWithdraw.getNumber()))
+       getAccountDetails(accountToWithdraw.getNumber())
                .andExpect(status().isOk())
                .andExpect(jsonPath("$.number").value(accountToWithdraw.getNumber()))
                .andExpect(jsonPath("$.currency").value(accountToWithdraw.getCurrency().name()))
@@ -153,13 +152,13 @@ public class AcceptanceTest {
                 .andExpect(jsonPath("$.currency").value(sourceAccount.getCurrency().name()))
                 .andExpect(jsonPath("$.balance").value(expectedSourceAccountBalance.doubleValue()));
 
-        mockMvc.perform(get("/api/accounts/{accountNumber}", sourceAccount.getNumber()))
+        getAccountDetails(sourceAccount.getNumber())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value(sourceAccount.getNumber()))
                 .andExpect(jsonPath("$.currency").value(sourceAccount.getCurrency().name()))
                 .andExpect(jsonPath("$.balance").value(expectedSourceAccountBalance.doubleValue()));
 
-        mockMvc.perform(get("/api/accounts/{accountNumber}", targetAccount.getNumber()))
+        getAccountDetails(targetAccount.getNumber())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value(targetAccount.getNumber()))
                 .andExpect(jsonPath("$.currency").value(targetAccount.getCurrency().name()))
@@ -177,50 +176,25 @@ public class AcceptanceTest {
                         .param("amount", transferAmount.toString()))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.timestamp", validErrorTimestamp()))
+                .andExpect(jsonPath("$.timestamp", errorTimestampMatcher()))
                 .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.value()))
-//                TODO: to turn back to error message
                 .andExpect(jsonPath("$.message").value("Withdraw amount exceeds balance"))
                 .andExpect(jsonPath("$.path").value("/api/accounts/%s/transfer".formatted(sourceAccount.getNumber())));
 
-        mockMvc.perform(get("/api/accounts/{accountNumber}", sourceAccount.getNumber()))
+        getAccountDetails(sourceAccount.getNumber())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value(sourceAccount.getNumber()))
                 .andExpect(jsonPath("$.currency").value(sourceAccount.getCurrency().name()))
                 .andExpect(jsonPath("$.balance").value(sourceAccount.getBalance().doubleValue()));
 
-        mockMvc.perform(get("/api/accounts/{accountNumber}", targetAccount.getNumber()))
+        getAccountDetails(targetAccount.getNumber())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value(targetAccount.getNumber()))
                 .andExpect(jsonPath("$.currency").value(targetAccount.getCurrency().name()))
                 .andExpect(jsonPath("$.balance").value(targetAccount.getBalance().doubleValue()));
     }
 
-    static class ErrorTimestampMatcher extends TypeSafeDiagnosingMatcher<String> {
-
-        static Matcher<String> validErrorTimestamp() {
-            return new ErrorTimestampMatcher();
-        }
-
-        @Override
-        protected boolean matchesSafely(String errorTimestampString, Description description) {
-            Instant errorTimestamp;
-            try {
-                errorTimestamp = Instant.parse(errorTimestampString);
-            } catch (Exception e) {
-                description.appendText("failed to parse timestamp from ").appendValue(errorTimestampString);
-                return false;
-            }
-            if (errorTimestamp.isBefore(Instant.now())) {
-                return true;
-            } else {
-                description.appendText("error timestamp must be less then current timestamp");
-                return false;
-            }
-        }
-
-        @Override
-        public void describeTo(Description description) {
-        }
+    private ResultActions getAccountDetails(String accountNumber) throws Exception {
+        return mockMvc.perform(get("/api/accounts/{accountNumber}", accountNumber));
     }
 }
