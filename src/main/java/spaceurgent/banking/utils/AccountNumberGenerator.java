@@ -1,7 +1,10 @@
 package spaceurgent.banking.utils;
 
+import org.springframework.stereotype.Component;
+
 import java.util.concurrent.atomic.AtomicLong;
 
+@Component
 public class AccountNumberGenerator {
     public AccountNumberGenerator() {
     }
