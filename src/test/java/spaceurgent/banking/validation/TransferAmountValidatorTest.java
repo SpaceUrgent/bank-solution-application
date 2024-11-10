@@ -1,5 +1,6 @@
 package spaceurgent.banking.validation;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import spaceurgent.banking.exception.ValidationException;
@@ -14,13 +15,15 @@ class TransferAmountValidatorTest {
 
     @ParameterizedTest
     @ValueSource(doubles = {0.01, 0.1, 10, 100})
-    void validate_withValidAmount(Double amountDoubleValue) {
+    @DisplayName("Validate with valid amount - OK")
+    void validate_withValidAmount_ok(Double amountDoubleValue) {
         assertDoesNotThrow(() -> transferAmountValidator.validate(BigDecimal.valueOf(amountDoubleValue)));
     }
 
     @ParameterizedTest
     @ValueSource(doubles = {-1, -0.01, 0, 0.001})
-    void validate_withInvalidAmount(Double amountDoubleValue) {
+    @DisplayName("Validate with negative or 0 amount throws")
+    void validate_withInvalidAmount_throws(Double amountDoubleValue) {
         final var exception = assertThrows(
                 ValidationException.class,
                 () -> transferAmountValidator.validate(BigDecimal.valueOf(amountDoubleValue))

@@ -1,5 +1,6 @@
 package spaceurgent.banking.validation;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,6 +12,8 @@ import spaceurgent.banking.exception.ValidationException;
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static spaceurgent.banking.TestConstants.DEFAULT_SOURCE_ACCOUNT_NUMBER;
+import static spaceurgent.banking.TestConstants.DEFAULT_TARGET_ACCOUNT_NUMBER;
 import static spaceurgent.banking.TestConstants.TEST_ACCOUNT_NUMBER;
 
 @ExtendWith(MockitoExtension.class)
@@ -21,16 +24,16 @@ class TransferRequestDtoValidatorTest {
     private TransferRequestDtoValidator transferRequestDtoValidator;
 
     @Test
+    @DisplayName("Validate - OK")
     void validate_ok() {
-        final var sourceAccountNumber = "26000000000001";
-        final var targetAccountNumber = "26000000000002";
         final var amount = BigDecimal.valueOf(100);
-        final var transferRequestDto = new TransferRequestDto(sourceAccountNumber, targetAccountNumber, amount);
+        final var transferRequestDto = new TransferRequestDto(DEFAULT_SOURCE_ACCOUNT_NUMBER, DEFAULT_TARGET_ACCOUNT_NUMBER, amount);
         assertDoesNotThrow(() -> transferRequestDtoValidator.validate(transferRequestDto));
     }
 
     @Test
-    void validate_withSourceAccountNumberEqualsToTargetAccountNumber() {
+    @DisplayName("Validate with source account number equals to target throws")
+    void validate_withSourceAccountNumberEqualsToTargetAccountNumber_throws() {
         final var amount = BigDecimal.valueOf(100);
         final var transferRequestDto = new TransferRequestDto(TEST_ACCOUNT_NUMBER, TEST_ACCOUNT_NUMBER, amount);
         final var exception = assertThrows(
@@ -44,7 +47,8 @@ class TransferRequestDtoValidatorTest {
     }
 
     @Test
-    void validate_withNullTransferRequest() {
+    @DisplayName("Validate with null transfer request - throws")
+    void validate_withNullTransferRequest_throws() {
         assertThrows(NullPointerException.class, () -> transferRequestDtoValidator.validate(null));
     }
 }

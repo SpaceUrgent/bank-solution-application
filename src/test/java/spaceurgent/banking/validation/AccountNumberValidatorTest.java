@@ -1,5 +1,6 @@
 package spaceurgent.banking.validation;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -12,18 +13,21 @@ class AccountNumberValidatorTest {
     private AccountNumberValidator accountNumberValidator = new AccountNumberValidator();
 
     @Test
-    void validate_withValidAccountNumber() {
+    @DisplayName("Validate with valid account number - OK")
+    void validate_withValidAccountNumber_ok() {
         assertDoesNotThrow(() -> accountNumberValidator.validate(TestConstants.TEST_ACCOUNT_NUMBER));
     }
 
     @Test
-    void validate_withNullAccountNumber() {
+    @DisplayName("Validate with null account number throws")
+    void validate_withNullAccountNumber_throws() {
         assertThrows(NullPointerException.class, () -> accountNumberValidator.validate(null));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"", "123121231", "00000000000000", "2600 00000 00000"})
-    void validate_withInvalidAccountNumber(String invalidAccountNumber) {
+    @DisplayName("Validate with invalid account number throws")
+    void validate_withInvalidAccountNumber_throws(String invalidAccountNumber) {
         final var exception = assertThrows(
                 ValidationException.class,
                 () -> accountNumberValidator.validate(invalidAccountNumber)

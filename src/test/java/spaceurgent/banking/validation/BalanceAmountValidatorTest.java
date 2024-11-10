@@ -1,5 +1,6 @@
 package spaceurgent.banking.validation;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -14,13 +15,15 @@ class BalanceAmountValidatorTest {
 
     @ParameterizedTest
     @ValueSource(doubles = {0, 0.0001, 0.1, 10, 100})
-    void validate_withValidBalance(Double balanceDoubleValue) {
+    @DisplayName("Validate with valid balance - OK")
+    void validate_withValidBalance_ok(Double balanceDoubleValue) {
         assertDoesNotThrow(() -> balanceAmountValidator.validate(BigDecimal.valueOf(balanceDoubleValue)));
     }
 
     @ParameterizedTest
     @ValueSource(doubles = {-0.001, -0.1, -1, -100})
-    void validate_withNegativeBalance(Double balanceDoubleValue) {
+    @DisplayName("Validate with negative balance throws")
+    void validate_withNegativeBalance_throws(Double balanceDoubleValue) {
         final var exception = assertThrows(
                 ValidationException.class,
                 () -> balanceAmountValidator.validate(BigDecimal.valueOf(balanceDoubleValue))
@@ -29,7 +32,8 @@ class BalanceAmountValidatorTest {
     }
 
     @Test
-    void validate_withNullBalance() {
+    @DisplayName("Validate with null balance throws")
+    void validate_withNullBalance_throws() {
         assertThrows(NullPointerException.class, () -> balanceAmountValidator.validate(null));
     }
 }
