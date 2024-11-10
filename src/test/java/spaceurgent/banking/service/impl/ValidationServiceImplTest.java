@@ -1,6 +1,7 @@
 package spaceurgent.banking.service.impl;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,13 +42,15 @@ class ValidationServiceImplTest {
     }
 
     @Test
-    void validateAccountNumber() {
+    @DisplayName("Validate account number - OK")
+    void validateAccountNumber_ok() {
         validationService.validateAccountNumber(TEST_ACCOUNT_NUMBER);
         verify(accountNumberValidator).validate(eq(TEST_ACCOUNT_NUMBER));
     }
 
     @Test
-    void validateTransferRequestDto() {
+    @DisplayName("Validate transfer request dto - OK")
+    void validateTransferRequestDto_ok() {
         final var transferRequestDto = new TransferRequestDto(
                 DEFAULT_SOURCE_ACCOUNT_NUMBER,
                 DEFAULT_TARGET_ACCOUNT_NUMBER,
@@ -58,14 +61,16 @@ class ValidationServiceImplTest {
     }
 
     @Test
-    void validateBalanceAmount() {
+    @DisplayName("Validate balance amount - OK")
+    void validateBalanceAmount_ok() {
         final var balanceAmount = BigDecimal.valueOf(150);
         validationService.validateBalanceAmount(balanceAmount);
         verify(balanceAmountValidator).validate(eq(balanceAmount));
     }
 
     @Test
-    void validateTransferAmount() {
+    @DisplayName("Validate transfer amount - OK")
+    void validateTransferAmount_ok() {
         final var transferAmount = BigDecimal.valueOf(200);
         validationService.validateTransferAmount(transferAmount);
         verify(transferAmountValidator).validate(eq(transferAmount));
