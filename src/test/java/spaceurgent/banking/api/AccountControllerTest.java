@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import spaceurgent.banking.TestUtils;
 import spaceurgent.banking.dto.AccountsDto;
 import spaceurgent.banking.dto.TransferRequestDto;
@@ -22,7 +24,6 @@ import spaceurgent.banking.service.AccountService;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,15 +31,18 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.spy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static spaceurgent.banking.TestConstants.DEFAULT_SOURCE_ACCOUNT_NUMBER;
+import static spaceurgent.banking.TestConstants.DEFAULT_TARGET_ACCOUNT_NUMBER;
 import static spaceurgent.banking.TestConstants.TEST_ACCOUNT_NUMBER;
 import static spaceurgent.banking.api.AccountControllerTest.ErrorTimestampMatcher.validErrorTimestamp;
+import static spaceurgent.banking.api.ApiConstants.AMOUNT_PARAMETER_NAME;
+import static spaceurgent.banking.api.ApiConstants.BALANCE_PARAMETER_NAME;
+import static spaceurgent.banking.api.ApiConstants.TARGET_ACCOUNT_NUMBER_PARAMETER_NAME;
 
 @WebMvcTest
 class AccountControllerTest {
@@ -51,46 +55,40 @@ class AccountControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void createAccount_withBalanceParam() throws Exception {
-        final var accountNumber = new Random().nextLong();
+    @DisplayName("Create account with balance param returns 201")
+    void createAccount_withBalanceParam_returns201() throws Exception {
         final var balance = BigDecimal.valueOf(100.50);
-        final var spiedAccount = spy(new Account(TEST_ACCOUNT_NUMBER, balance));
-        doReturn(spiedAccount).when(accountService).createAccount(eq(balance));
-        doReturn(accountNumber).when(spiedAccount).getId();
-        mockMvc.perform(post("/api/accounts")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("balance", balance.toString()))
-                .andDo(print())
+        final var account = new Account(TEST_ACCOUNT_NUMBER, balance);
+        doReturn(account).when(accountService).createAccount(eq(balance));
+        final var apiActionResult = mockMvc.perform(post("/api/accounts")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param(BALANCE_PARAMETER_NAME, balance.toString()))
                 .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.number").value(TEST_ACCOUNT_NUMBER))
-                .andExpect(jsonPath("$.currency").value(spiedAccount.getCurrency().name()))
-                .andExpect(jsonPath("$.balance").value(balance));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        assertAccountDetailsViewMatchAccount(apiActionResult, account);
     }
 
     @Test
-    void createAccount_withoutBalanceParam() throws Exception {
-        final var accountNumber = new Random().nextLong();
-        final var spiedAccount = spy(new Account(TEST_ACCOUNT_NUMBER, BigDecimal.valueOf(0.00)));
-        doReturn(spiedAccount).when(accountService).createAccount(argThat(new ZeroBalanceMatcher()));
-        doReturn(accountNumber).when(spiedAccount).getId();
-        mockMvc.perform(post("/api/accounts")
+    @DisplayName("Create account without balance param returns 201")
+    void createAccount_withoutBalanceParam_returns201() throws Exception {
+        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.ZERO);
+        doReturn(account).when(accountService).createAccount(argThat(new ZeroBalanceMatcher()));
+        final var apiActionResult = mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED))
                 .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.number").value(TEST_ACCOUNT_NUMBER))
-                .andExpect(jsonPath("$.currency").value(spiedAccount.getCurrency().name()))
-                .andExpect(jsonPath("$.balance").value(BigDecimal.valueOf(0.00).toString()));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        assertAccountDetailsViewMatchAccount(apiActionResult, account);
     }
 
     @Test
-    void createAccount_withNegativeBalanceParam() throws Exception {
+    @DisplayName("Create account with negative balance returns 400")
+    void createAccount_withNegativeBalanceParam_returns400() throws Exception {
         final var negativeBalance = BigDecimal.valueOf(-100);
         final var errorMessage = "Balance can't be negative";
         doThrow(new InvalidAmountException(errorMessage)).when(accountService).createAccount(argThat(new NegativeBalanceMatcher()));
         mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("balance", negativeBalance.toString()))
+                        .param(BALANCE_PARAMETER_NAME, negativeBalance.toString()))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.timestamp").exists())
@@ -101,7 +99,8 @@ class AccountControllerTest {
     }
 
     @Test
-    void getAccounts_ok() throws Exception {
+    @DisplayName("Get accounts returns 200")
+    void getAccounts_returns200() throws Exception {
         final var accounts = TestUtils.randomAccounts();
         doReturn(accounts).when(accountService).findAccounts();
         final var responseBodyJson = mockMvc.perform(get("/api/accounts"))
@@ -122,19 +121,19 @@ class AccountControllerTest {
     }
 
     @Test
-    void getAccount_ok() throws Exception {
-        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.valueOf(0.00));
-        doReturn(account).when(accountService).findAccount(eq(TEST_ACCOUNT_NUMBER));
-        mockMvc.perform(get("/api/accounts/{accountNumber}", TEST_ACCOUNT_NUMBER))
+    @DisplayName("Get account returns 200")
+    void getAccount_returns200() throws Exception {
+        final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.ZERO);
+        doReturn(account).when(accountService).findAccount(eq(account.getNumber()));
+        final var apiActionResult = mockMvc.perform(get("/api/accounts/{accountNumber}", account.getNumber()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.number").value(TEST_ACCOUNT_NUMBER))
-                .andExpect(jsonPath("$.currency").value(account.getCurrency().name()))
-                .andExpect(jsonPath("$.balance").value(BigDecimal.valueOf(0.00)));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        assertAccountDetailsViewMatchAccount(apiActionResult, account);
     }
 
     @Test
-    void getAccount_withNonExistingAccountNumber() throws Exception {
+    @DisplayName("Get account with non-existing account number returns 404")
+    void getAccount_withNonExistingAccountNumber_returns404() throws Exception {
         final var errorMessage = "Account not found";
         doThrow(new AccountNotFoundException(errorMessage)).when(accountService).findAccount(any());
         mockMvc.perform(get("/api/accounts/{accountNumber}", TEST_ACCOUNT_NUMBER))
@@ -148,21 +147,23 @@ class AccountControllerTest {
     }
 
     @Test
-    void depositToAccount_ok() throws Exception {
+    @DisplayName("Deposit to account returns 200")
+    void depositToAccount_returns200() throws Exception {
         final var depositAmount = BigDecimal.valueOf(100.00);
         final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.valueOf(0.00));
         account.deposit(depositAmount);
-        doReturn(account).when(accountService).depositToAccount(eq(TEST_ACCOUNT_NUMBER), eq(depositAmount));
-        mockMvc.perform(post("/api/accounts/{accountNumber}/deposit", TEST_ACCOUNT_NUMBER)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("amount", depositAmount.toString()))
-                .andExpect(jsonPath("$.number").value(TEST_ACCOUNT_NUMBER))
-                .andExpect(jsonPath("$.currency").value(account.getCurrency().name()))
-                .andExpect(jsonPath("$.balance").value(account.getBalance().doubleValue()));
+        doReturn(account).when(accountService).depositToAccount(eq(account.getNumber()), eq(depositAmount));
+        final var apiActionResult = mockMvc.perform(post("/api/accounts/{accountNumber}/deposit", account.getNumber())
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .param(AMOUNT_PARAMETER_NAME, depositAmount.toString()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        assertAccountDetailsViewMatchAccount(apiActionResult, account);
     }
 
     @Test
-    void depositToAccount_withoutAmount_returnsBadRequest() throws Exception {
+    @DisplayName("Deposit to account without amount parameter returns 400")
+    void depositToAccount_withoutAmount_returns400() throws Exception {
         mockMvc.perform(post("/api/accounts/{accountNumber}/deposit", TEST_ACCOUNT_NUMBER)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED))
                 .andExpect(status().isBadRequest())
@@ -175,22 +176,22 @@ class AccountControllerTest {
     }
 
     @Test
-    void withdrawFromAccount_ok() throws Exception {
+    @DisplayName("Withdraw from account returns 200")
+    void withdrawFromAccount_returns200() throws Exception {
         final var withdrawAmount = BigDecimal.valueOf(10);
         final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.valueOf(100));
-        doReturn(account).when(accountService).withdrawFromAccount(eq(TEST_ACCOUNT_NUMBER), eq(withdrawAmount));
-        mockMvc.perform(post("/api/accounts/{accountNumber}/withdraw", TEST_ACCOUNT_NUMBER)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("amount", withdrawAmount.toString()))
+        doReturn(account).when(accountService).withdrawFromAccount(eq(account.getNumber()), eq(withdrawAmount));
+        final var apiActionResult = mockMvc.perform(post("/api/accounts/{accountNumber}/withdraw", account.getNumber())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param(AMOUNT_PARAMETER_NAME, withdrawAmount.toString()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.number").value(TEST_ACCOUNT_NUMBER))
-                .andExpect(jsonPath("$.currency").value(account.getCurrency().name()))
-                .andExpect(jsonPath("$.balance").value(account.getBalance().doubleValue()));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        assertAccountDetailsViewMatchAccount(apiActionResult, account);
     }
 
     @Test
-    void withdrawFromAccount_withoutAmount_returnsBadRequest() throws Exception {
+    @DisplayName("Withdraw from account without amount parameter returns 400")
+    void withdrawFromAccount_withoutAmount_returns400() throws Exception {
         final var withdrawAmount = BigDecimal.valueOf(10);
         final var account = new Account(TEST_ACCOUNT_NUMBER, BigDecimal.valueOf(100));
         doReturn(account).when(accountService).withdrawFromAccount(eq(TEST_ACCOUNT_NUMBER), eq(withdrawAmount));
@@ -205,53 +206,60 @@ class AccountControllerTest {
     }
 
     @Test
+    @DisplayName("Transfer to account returns 200")
     void transferToAccount_ok() throws Exception {
-        final var sourceAccountNumber = "26000000000001";
-        final var targetAccountNumber = "26000000000002";
         final var transferAmount = BigDecimal.valueOf(10);
-        final var expectedTransferRequest = new TransferRequestDto(sourceAccountNumber, targetAccountNumber, transferAmount);
-        final var sourceAccount = new Account(sourceAccountNumber, BigDecimal.valueOf(100));
-        doReturn(sourceAccount).when(accountService).transferToAccount(expectedTransferRequest);
-        mockMvc.perform(post("/api/accounts/{accountNumber}/transfer", sourceAccountNumber)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("targetAccountNumber", targetAccountNumber)
-                .param("amount", transferAmount.toString()))
+        final var expectedTransferRequest = new TransferRequestDto(
+                DEFAULT_SOURCE_ACCOUNT_NUMBER,
+                DEFAULT_TARGET_ACCOUNT_NUMBER,
+                transferAmount
+        );
+        final var sourceAccount = new Account(DEFAULT_SOURCE_ACCOUNT_NUMBER, BigDecimal.valueOf(100));
+        doReturn(sourceAccount).when(accountService).transferToAccount(eq(expectedTransferRequest));
+        final var apiActionResult = mockMvc.perform(post("/api/accounts/{accountNumber}/transfer", DEFAULT_SOURCE_ACCOUNT_NUMBER)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param(TARGET_ACCOUNT_NUMBER_PARAMETER_NAME, DEFAULT_TARGET_ACCOUNT_NUMBER)
+                        .param(AMOUNT_PARAMETER_NAME, transferAmount.toString()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.number").value(sourceAccount.getNumber()))
-                .andExpect(jsonPath("$.currency").value(sourceAccount.getCurrency().name()))
-                .andExpect(jsonPath("$.balance").value(sourceAccount.getBalance().doubleValue()));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        assertAccountDetailsViewMatchAccount(apiActionResult, sourceAccount);
     }
 
     @Test
-    void transferToAccount_withoutTargetAccountNumber_returnsBadRequest() throws Exception {
-        final var sourceAccountNumber = "26000000000001";
-        mockMvc.perform(post("/api/accounts/{accountNumber}/transfer", sourceAccountNumber)
+    @DisplayName("Transfer to account without target account number returns 400")
+    void transferToAccount_withoutTargetAccountNumber_returns400() throws Exception {
+        mockMvc.perform(post("/api/accounts/{accountNumber}/transfer", DEFAULT_SOURCE_ACCOUNT_NUMBER)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("amount", BigDecimal.valueOf(10).toString()))
+                        .param(AMOUNT_PARAMETER_NAME, BigDecimal.valueOf(10).toString()))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.timestamp", validErrorTimestamp()))
                 .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.value()))
                 .andExpect(jsonPath("$.message").value("Required parameter 'targetAccountNumber' is not present."))
-                .andExpect(jsonPath("$.path").value("/api/accounts/%s/transfer".formatted(sourceAccountNumber)));
+                .andExpect(jsonPath("$.path").value("/api/accounts/%s/transfer".formatted(DEFAULT_SOURCE_ACCOUNT_NUMBER)));
     }
 
     @Test
-    void transferToAccount_withoutAmount_returnsBadRequest() throws Exception {
-        final var sourceAccountNumber = "26000000000001";
-        final var targetAccountNumber = "26000000000002";
-        mockMvc.perform(post("/api/accounts/{accountNumber}/transfer", sourceAccountNumber)
+    @DisplayName("Transfer to account without amount parameter returns 400")
+    void transferToAccount_withoutAmount_returns400() throws Exception {
+        mockMvc.perform(post("/api/accounts/{accountNumber}/transfer", DEFAULT_SOURCE_ACCOUNT_NUMBER)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("targetAccountNumber", targetAccountNumber))
+                        .param(TARGET_ACCOUNT_NUMBER_PARAMETER_NAME, DEFAULT_TARGET_ACCOUNT_NUMBER))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.timestamp", validErrorTimestamp()))
                 .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.value()))
                 .andExpect(jsonPath("$.message").value("Required parameter 'amount' is not present."))
-                .andExpect(jsonPath("$.path").value("/api/accounts/%s/transfer".formatted(sourceAccountNumber)));
+                .andExpect(jsonPath("$.path").value("/api/accounts/%s/transfer".formatted(DEFAULT_SOURCE_ACCOUNT_NUMBER)));
+    }
+
+    private void assertAccountDetailsViewMatchAccount(ResultActions resultActions, Account account) throws Exception {
+        resultActions
+                .andExpect(jsonPath("$.number").value(account.getNumber()))
+                .andExpect(jsonPath("$.currency").value(account.getCurrency().name()))
+                .andExpect(jsonPath("$.balance").value(account.getBalance().doubleValue()));
     }
 
     private static class ZeroBalanceMatcher implements ArgumentMatcher<BigDecimal> {
