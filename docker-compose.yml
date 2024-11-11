@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  application:
+    build:
+      context: .
+      dockerfile: Dockerfile-app
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
+  jacoco-report:
+    build:
+      context: .
+      dockerfile: Dockerfile-jacoco
+    ports:
+      - "8081:8081"
+    depends_on:
+      - application
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

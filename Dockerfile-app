@@ -1,0 +1,20 @@
+FROM maven:3.8.4-openjdk-17 AS builder
+WORKDIR /app
+COPY . /app
+RUN mvn clean package
+
+FROM node:16-alpine
+
+COPY --from=builder /app/target/site/jacoco /app/jacoco/
+RUN npm install -g http-server
+EXPOSE 8081
+
+CMD ["http-server", "/app/jacoco", "-p", "8080"]
+
+FROM eclipse-temurin:17-jre
+COPY --from=builder /app/target/*.jar /app/app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+
