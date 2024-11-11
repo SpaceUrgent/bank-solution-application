@@ -42,8 +42,8 @@ Start by cloning the repository to your local machine.
 Enter the project dir after project cloned.
 
 ```bash
-git clone https://github.com/yourusername/bank-solution-application.git
-cd bank-solution-application
+git clone https://github.com/SpaceUrgent/banking-service.git
+cd banking-service
 ```
 
 Build and run services, including web server for test reports.
@@ -60,8 +60,8 @@ Start by cloning the repository to your local machine.
 Enter the project dir after project cloned.
 
 ```bash
-git clone https://github.com/yourusername/bank-solution-application.git
-cd bank-solution-application
+git clone https://github.com/SpaceUrgent/banking-service.git
+cd banking-service
 ```
 Build project using Maven
 
